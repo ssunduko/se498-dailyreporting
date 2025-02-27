@@ -1,0 +1,15 @@
+temp1,temp2,description,is_hot,is_cold,is_moderate
+-40.0,-40.0,Extreme Cold,false,true,false
+0.0,-17.78,Freezing,false,true,false
+32.0,0.0,Freezing Point,false,true,false
+50.0,10.0,Cool,false,false,true
+68.0,20.0,Room Temperature,false,false,true
+72.0,22.22,Comfortable,false,false,true
+77.0,25.0,Warm,false,false,true
+85.0,29.44,Very Warm,false,false,true
+86.0,30.0,Hot Threshold,true,false,false
+90.0,32.22,Hot,true,false,false
+95.0,35.0,Very Hot,true,false,false
+98.6,37.0,Body Temperature,true,false,false
+100.0,37.78,Extremely Hot,true,false,false
+212.0,100.0,Boiling Point,true,false,false
