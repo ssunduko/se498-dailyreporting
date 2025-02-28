@@ -1,0 +1,128 @@
+scalar Date
+scalar DateTime
+
+enum ReportStatus {
+    DRAFT
+    SUBMITTED
+    APPROVED
+    REJECTED
+}
+
+enum ActivityStatus {
+    PLANNED
+    IN_PROGRESS
+    COMPLETED
+    DELAYED
+    CANCELLED
+}
+
+type DailyReport {
+    id: ID!
+    projectId: String!
+    reportDate: Date!
+    status: ReportStatus!
+    notes: String
+    activities: [ActivityEntry]
+    createdAt: DateTime!
+    createdBy: String!
+    updatedAt: DateTime
+    updatedBy: String
+    progress: Float!
+    complete: Boolean!
+}
+
+type ActivityEntry {
+    id: ID!
+    reportId: String!
+    description: String!
+    category: String!
+    startTime: DateTime!
+    endTime: DateTime!
+    progress: Float!
+    status: ActivityStatus!
+    notes: String
+    personnel: [String]
+    createdAt: DateTime!
+    createdBy: String!
+    updatedAt: DateTime
+    durationMinutes: Int!
+}
+
+input DailyReportInput {
+    projectId: String!
+    reportDate: Date!
+    notes: String
+}
+
+input ActivityEntryInput {
+    description: String!
+    category: String!
+    startTime: DateTime!
+    endTime: DateTime!
+    progress: Float!
+    status: ActivityStatus!
+    notes: String
+    personnel: [String]
+}
+
+input ActivityProgressInput {
+    progress: Float!
+}
+
+type Query {
+    # Get a specific report by ID
+    report(id: ID!): DailyReport
+
+    # Get reports by project
+    reportsByProject(projectId: String!, startDate: Date, endDate: Date): [DailyReport]
+
+    # Get reports by status
+    reportsByStatus(status: ReportStatus!): [DailyReport]
+
+    # Get a specific activity
+    activity(id: ID!): ActivityEntry
+
+    # Get activities for a report
+    activitiesByReport(reportId: ID!): [ActivityEntry]
+
+    # Get report progress
+    reportProgress(reportId: ID!): Float
+
+    # Check if report is complete
+    isReportComplete(reportId: ID!): Boolean
+
+    # Get total activity duration for a report
+    reportDuration(reportId: ID!): Int
+}
+
+type Mutation {
+    # Create a new report
+    createReport(input: DailyReportInput!): DailyReport
+
+    # Update a report
+    updateReport(id: ID!, input: DailyReportInput!): DailyReport
+
+    # Submit a report
+    submitReport(id: ID!): DailyReport
+
+    # Approve a report
+    approveReport(id: ID!): DailyReport
+
+    # Reject a report
+    rejectReport(id: ID!, reason: String!): DailyReport
+
+    # Delete a report
+    deleteReport(id: ID!): Boolean
+
+    # Add an activity to a report
+    addActivity(reportId: ID!, input: ActivityEntryInput!): ActivityEntry
+
+    # Update an activity
+    updateActivity(id: ID!, input: ActivityEntryInput!): ActivityEntry
+
+    # Update activity progress
+    updateActivityProgress(id: ID!, input: ActivityProgressInput!): ActivityEntry
+
+    # Delete an activity
+    deleteActivity(id: ID!): Boolean
+}
