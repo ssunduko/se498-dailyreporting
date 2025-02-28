@@ -45,16 +45,17 @@ type ActivityEntry {
     createdAt: DateTime!
     createdBy: String!
     updatedAt: DateTime
+    updatedBy: String
     durationMinutes: Int!
 }
 
-input DailyReportInput {
+input DailyReportRequest {
     projectId: String!
     reportDate: Date!
     notes: String
 }
 
-input ActivityEntryInput {
+input ActivityEntryRequest {
     description: String!
     category: String!
     startTime: DateTime!
@@ -65,7 +66,7 @@ input ActivityEntryInput {
     personnel: [String]
 }
 
-input ActivityProgressInput {
+input ActivityProgressRequest {
     progress: Float!
 }
 
@@ -97,10 +98,10 @@ type Query {
 
 type Mutation {
     # Create a new report
-    createReport(input: DailyReportInput!): DailyReport
+    createReport(input: DailyReportRequest!): DailyReport
 
     # Update a report
-    updateReport(id: ID!, input: DailyReportInput!): DailyReport
+    updateReport(id: ID!, input: DailyReportRequest!): DailyReport
 
     # Submit a report
     submitReport(id: ID!): DailyReport
@@ -115,13 +116,13 @@ type Mutation {
     deleteReport(id: ID!): Boolean
 
     # Add an activity to a report
-    addActivity(reportId: ID!, input: ActivityEntryInput!): ActivityEntry
+    addActivity(reportId: ID!, input: ActivityEntryRequest!): ActivityEntry
 
     # Update an activity
-    updateActivity(id: ID!, input: ActivityEntryInput!): ActivityEntry
+    updateActivity(id: ID!, input: ActivityEntryRequest!): ActivityEntry
 
     # Update activity progress
-    updateActivityProgress(id: ID!, input: ActivityProgressInput!): ActivityEntry
+    updateActivityProgress(id: ID!, input: ActivityProgressRequest!): ActivityEntry
 
     # Delete an activity
     deleteActivity(id: ID!): Boolean

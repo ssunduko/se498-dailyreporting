@@ -4,10 +4,9 @@ import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.bo.DailyReport;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.dto.ActivityEntryRequest;
-import com.se498.dailyreporting.dto.ActivityEntryResponse;
+import com.se498.dailyreporting.dto.ActivityProgressRequest;
 import com.se498.dailyreporting.dto.DailyReportRequest;
 import com.se498.dailyreporting.service.DailyReportingService;
-import com.se498.dailyreporting.service.DailyReportingServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -255,7 +254,7 @@ public class DailyReportGraphQLController {
     @MutationMapping
     public ActivityEntry updateActivityProgress(
             @Argument String id,
-            @Argument ActivityEntryResponse input,
+            @Argument ActivityProgressRequest input,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         log.info("GraphQL: Updating progress for activity: {} to {}%", id, input.getProgress());

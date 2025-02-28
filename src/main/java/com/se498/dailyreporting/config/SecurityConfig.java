@@ -39,6 +39,8 @@ public class SecurityConfig{
                                         .requestMatchers("/css/**", "/js/**", "/signup", "/logout").permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                                        .requestMatchers(new AntPathRequestMatcher("/graphiql/**")).permitAll()
+                                        .requestMatchers(new AntPathRequestMatcher("/voyager/**")).permitAll()
                                         .anyRequest()
                                         .authenticated();
                             } catch (Exception e) {
@@ -51,23 +53,7 @@ public class SecurityConfig{
         http.csrf(AbstractHttpConfigurer::disable);
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
-        http.logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login")
-                .invalidateHttpSession(true)        // set invalidation state when logout
-                .deleteCookies("JSESSIONID")
-        );
 
-        http.formLogin(formLogin ->
-                formLogin
-                        .loginPage("/login")
-                        .permitAll()
-        );
-
-        http.formLogin(formLogin ->
-                formLogin
-                        .defaultSuccessUrl("/chat", true)
-        );
 
         return http.build();
     }

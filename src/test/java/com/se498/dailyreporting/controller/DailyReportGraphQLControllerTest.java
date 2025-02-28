@@ -2,71 +2,101 @@ package com.se498.dailyreporting.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.bo.DailyReport;
-import com.se498.dailyreporting.domain.vo.ReportStatus;
-import com.se498.dailyreporting.service.DailyReportingServiceImpl;
+import com.se498.dailyreporting.domain.vo.ActivityStatus;
+import com.se498.dailyreporting.service.DailyReportingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
 public class DailyReportGraphQLControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private ObjectMapper objectMapper;
+    @Autowired
+    private DailyReportingService reportingService;
 
-    @MockBean
-    private DailyReportingServiceImpl reportingService;
+    private ObjectMapper objectMapper;
+    private String testProjectId;
+    private String testReportId;
+    private String testActivityId;
+    private DateTimeFormatter dateTimeFormatter;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+        dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+
+        // Create test data with unique identifiers
+        testProjectId = "test-project-" + UUID.randomUUID();
+
+        // Create a test report
+        DailyReport report = reportingService.createReport(
+                testProjectId,
+                LocalDate.now(),
+                "test-user"
+        );
+        testReportId = report.getId();
+
+        // Create a test activity
+        ActivityEntry activity = new ActivityEntry();
+        activity.setId(UUID.randomUUID().toString());
+        activity.setReportId(testReportId);
+        activity.setDescription("Test Activity");
+        activity.setCategory("Test Category");
+        activity.setStartTime(LocalDateTime.now().minusHours(2));
+        activity.setEndTime(LocalDateTime.now().minusHours(1));
+        activity.setProgress(50.0);
+        activity.setStatus(ActivityStatus.IN_PROGRESS);
+        activity.setNotes("Test Notes");
+        activity.setCreatedBy("test-user");
+        activity.setCreatedAt(LocalDateTime.now());
+
+        Set<String> personnel = new HashSet<>();
+        personnel.add("person1");
+        activity.setPersonnel(personnel);
+
+        ActivityEntry savedActivity = reportingService.addActivityToReport(testReportId, activity);
+        testActivityId = savedActivity.getId();
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void testGetReport() throws Exception {
-        // Mock data
-        DailyReport report = new DailyReport();
-        report.setId("test-report-id");
-        report.setProjectId("test-project");
-        report.setReportDate(LocalDate.now());
-        report.setStatus(ReportStatus.DRAFT);
-        report.setCreatedAt(LocalDateTime.now());
-        report.setCreatedBy("testuser");
-
-        when(reportingService.getReport("test-report-id")).thenReturn(Optional.of(report));
-
+    @WithMockUser(username = "test-user")
+    void testQueryReportById() throws Exception {
         // GraphQL query
-        String query = """
+        String query = String.format("""
             {
-              "query": "query { report(id: \\"test-report-id\\") { id projectId status createdBy } }"
+              "query": "query { report(id: \\"%s\\") { id projectId status createdBy } }"
             }
-            """;
+            """, testReportId);
 
-        // Execute and verify
+        // Execute query
         MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.post("/graphql")
                                 .with(SecurityMockMvcRequestPostProcessors.csrf())
@@ -75,46 +105,27 @@ public class DailyReportGraphQLControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // Parse and verify response
         String responseBody = result.getResponse().getContentAsString();
         JsonNode root = objectMapper.readTree(responseBody);
 
-        assertEquals("test-report-id", root.path("data").path("report").path("id").asText());
-        assertEquals("test-project", root.path("data").path("report").path("projectId").asText());
+        assertEquals(testReportId, root.path("data").path("report").path("id").asText());
+        assertEquals(testProjectId, root.path("data").path("report").path("projectId").asText());
         assertEquals("DRAFT", root.path("data").path("report").path("status").asText());
-        assertEquals("testuser", root.path("data").path("report").path("createdBy").asText());
+        assertEquals("test-user", root.path("data").path("report").path("createdBy").asText());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void testGetReportsByProject() throws Exception {
-        // Mock data
-        DailyReport report1 = new DailyReport();
-        report1.setId("report-1");
-        report1.setProjectId("test-project");
-        report1.setReportDate(LocalDate.now().minusDays(1));
-        report1.setStatus(ReportStatus.DRAFT);
-        report1.setCreatedAt(LocalDateTime.now());
-        report1.setCreatedBy("testuser");
-
-        DailyReport report2 = new DailyReport();
-        report2.setId("report-2");
-        report2.setProjectId("test-project");
-        report2.setReportDate(LocalDate.now());
-        report2.setStatus(ReportStatus.SUBMITTED);
-        report2.setCreatedAt(LocalDateTime.now());
-        report2.setCreatedBy("testuser");
-
-        when(reportingService.getReportsByProject("test-project"))
-                .thenReturn(Arrays.asList(report1, report2));
-
+    @WithMockUser(username = "test-user")
+    void testQueryReportsByProject() throws Exception {
         // GraphQL query
-        String query = """
+        String query = String.format("""
             {
-              "query": "query { reportsByProject(projectId: \\"test-project\\") { id status } }"
+              "query": "query { reportsByProject(projectId: \\"%s\\") { id status } }"
             }
-            """;
+            """, testProjectId);
 
-        // Execute and verify
+        // Execute query
         MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.post("/graphql")
                                 .with(SecurityMockMvcRequestPostProcessors.csrf())
@@ -123,58 +134,258 @@ public class DailyReportGraphQLControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // Parse and verify response
         String responseBody = result.getResponse().getContentAsString();
         JsonNode root = objectMapper.readTree(responseBody);
 
         JsonNode reports = root.path("data").path("reportsByProject");
         assertTrue(reports.isArray());
-        assertEquals(2, reports.size());
-        assertEquals("report-1", reports.get(0).path("id").asText());
+        assertEquals(testReportId, reports.get(0).path("id").asText());
         assertEquals("DRAFT", reports.get(0).path("status").asText());
-        assertEquals("report-2", reports.get(1).path("id").asText());
-        assertEquals("SUBMITTED", reports.get(1).path("status").asText());
     }
 
     @Test
-    @WithMockUser(username = "testuser")
-    void testCreateReport() throws Exception {
-        // Mock data
-        DailyReport report = new DailyReport();
-        report.setId("new-report-id");
-        report.setProjectId("test-project");
-        report.setReportDate(LocalDate.parse("2023-05-15"));
-        report.setStatus(ReportStatus.DRAFT);
-        report.setCreatedAt(LocalDateTime.now());
-        report.setCreatedBy("testuser");
-
-        when(reportingService.createReport("test-project", LocalDate.parse("2023-05-15"), "testuser"))
-                .thenReturn(report);
-        when(reportingService.updateReport("new-report-id", "Test notes", "testuser"))
-                .thenReturn(report);
-
-        // GraphQL mutation
-        String mutation = """
+    @WithMockUser(username = "test-user")
+    void testQueryActivity() throws Exception {
+        // GraphQL query
+        String query = String.format("""
             {
-              "query": "mutation { createReport(input: { projectId: \\"test-project\\", reportDate: \\"2023-05-15\\", notes: \\"Test notes\\" }) { id projectId reportDate status } }"
+              "query": "query { activity(id: \\"%s\\") { id description category status progress } }"
             }
-            """;
+            """, testActivityId);
 
-        // Execute and verify
+        // Execute query
         MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.post("/graphql")
                                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(mutation))
+                                .content(query))
                 .andExpect(status().isOk())
                 .andReturn();
 
+        // Parse and verify response
         String responseBody = result.getResponse().getContentAsString();
         JsonNode root = objectMapper.readTree(responseBody);
 
-        JsonNode createdReport = root.path("data").path("createReport");
-        assertEquals("new-report-id", createdReport.path("id").asText());
-        assertEquals("test-project", createdReport.path("projectId").asText());
-        assertEquals("2023-05-15", createdReport.path("reportDate").asText());
-        assertEquals("DRAFT", createdReport.path("status").asText());
+        JsonNode activity = root.path("data").path("activity");
+        assertEquals(testActivityId, activity.path("id").asText());
+        assertEquals("Test Activity", activity.path("description").asText());
+        assertEquals("Test Category", activity.path("category").asText());
+        assertEquals("IN_PROGRESS", activity.path("status").asText());
+        assertEquals(50.0, activity.path("progress").asDouble());
+    }
+
+    @Test
+    @WithMockUser(username = "test-user")
+    void testCreateAndUpdateReport() throws Exception {
+        // Create a new report
+        String newProjectId = "new-project-" + UUID.randomUUID();
+        LocalDate reportDate = LocalDate.now().plusDays(1);
+
+        String createMutation = String.format("""
+            {
+              "query": "mutation { createReport(input: { projectId: \\"%s\\", reportDate: \\"%s\\", notes: \\"Test Notes\\" }) { id projectId reportDate status notes } }"
+            }
+            """, newProjectId, reportDate);
+
+        MvcResult createResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(createMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String createResponseBody = createResult.getResponse().getContentAsString();
+        JsonNode createRoot = objectMapper.readTree(createResponseBody);
+        String newReportId = createRoot.path("data").path("createReport").path("id").asText();
+
+        // Update the newly created report
+        String updateMutation = String.format("""
+            {
+              "query": "mutation { updateReport(id: \\"%s\\", input: { projectId: \\"%s\\", reportDate: \\"%s\\", notes: \\"Updated Notes\\" }) { id notes } }"
+            }
+            """, newReportId, newProjectId, reportDate);
+
+        MvcResult updateResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String updateResponseBody = updateResult.getResponse().getContentAsString();
+        JsonNode updateRoot = objectMapper.readTree(updateResponseBody);
+
+        assertEquals(newReportId, updateRoot.path("data").path("updateReport").path("id").asText());
+        assertEquals("Updated Notes", updateRoot.path("data").path("updateReport").path("notes").asText());
+    }
+
+    @Test
+    @WithMockUser(username = "test-user")
+    void testReportWorkflow() throws Exception {
+        // Submit the report
+        String submitMutation = String.format("""
+            {
+              "query": "mutation { submitReport(id: \\"%s\\") { id status } }"
+            }
+            """, testReportId);
+
+        MvcResult submitResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(submitMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String submitResponseBody = submitResult.getResponse().getContentAsString();
+        JsonNode submitRoot = objectMapper.readTree(submitResponseBody);
+
+        assertEquals(testReportId, submitRoot.path("data").path("submitReport").path("id").asText());
+        assertEquals("SUBMITTED", submitRoot.path("data").path("submitReport").path("status").asText());
+
+        // Approve the report
+        String approveMutation = String.format("""
+            {
+              "query": "mutation { approveReport(id: \\"%s\\") { id status } }"
+            }
+            """, testReportId);
+
+        MvcResult approveResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(approveMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String approveResponseBody = approveResult.getResponse().getContentAsString();
+        JsonNode approveRoot = objectMapper.readTree(approveResponseBody);
+
+        assertEquals(testReportId, approveRoot.path("data").path("approveReport").path("id").asText());
+        assertEquals("APPROVED", approveRoot.path("data").path("approveReport").path("status").asText());
+    }
+
+    @Test
+    @WithMockUser(username = "test-user")
+    void testAddAndUpdateActivity() throws Exception {
+        // Add a new activity
+        LocalDateTime startTime = LocalDateTime.now().minusHours(4);
+        LocalDateTime endTime = LocalDateTime.now().minusHours(3);
+
+        String addMutation = String.format("""
+            {
+              "query": "mutation { addActivity(reportId: \\"%s\\", input: { description: \\"New Activity\\", category: \\"New Category\\", startTime: \\"%s\\", endTime: \\"%s\\", progress: 25.0, status: PLANNED, notes: \\"New Notes\\", personnel: [\\"person1\\", \\"person2\\"] }) { id description category progress status } }"
+            }
+            """, testReportId, startTime.format(dateTimeFormatter), endTime.format(dateTimeFormatter));
+
+        MvcResult addResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(addMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String addResponseBody = addResult.getResponse().getContentAsString();
+        JsonNode addRoot = objectMapper.readTree(addResponseBody);
+        String newActivityId = addRoot.path("data").path("addActivity").path("id").asText();
+
+        // Update activity progress
+        String progressMutation = String.format("""
+            {
+              "query": "mutation { updateActivityProgress(id: \\"%s\\", input: { progress: 90.0 }) { id progress status } }"
+            }
+            """, newActivityId);
+
+        MvcResult progressResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(progressMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String progressResponseBody = progressResult.getResponse().getContentAsString();
+        JsonNode progressRoot = objectMapper.readTree(progressResponseBody);
+
+        assertEquals(newActivityId, progressRoot.path("data").path("updateActivityProgress").path("id").asText());
+        assertEquals(90.0, progressRoot.path("data").path("updateActivityProgress").path("progress").asDouble());
+    }
+
+    @Test
+    @WithMockUser(username = "test-user")
+    void testReportAnalytics() throws Exception {
+        // Query progress
+        String progressQuery = String.format("""
+            {
+              "query": "query { reportProgress(reportId: \\"%s\\") }"
+            }
+            """, testReportId);
+
+        MvcResult progressResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(progressQuery))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String progressResponseBody = progressResult.getResponse().getContentAsString();
+        JsonNode progressRoot = objectMapper.readTree(progressResponseBody);
+        double progress = progressRoot.path("data").path("reportProgress").asDouble();
+
+        assertEquals(50.0, progress);
+
+        // Query completion status
+        String completeQuery = String.format("""
+            {
+              "query": "query { isReportComplete(reportId: \\"%s\\") }"
+            }
+            """, testReportId);
+
+        MvcResult completeResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(completeQuery))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String completeResponseBody = completeResult.getResponse().getContentAsString();
+        JsonNode completeRoot = objectMapper.readTree(completeResponseBody);
+        boolean isComplete = completeRoot.path("data").path("isReportComplete").asBoolean();
+
+        assertFalse(isComplete);
+    }
+
+    @Test
+    @WithMockUser(username = "test-user")
+    void testDeleteActivity() throws Exception {
+        // Delete the activity
+        String deleteMutation = String.format("""
+            {
+              "query": "mutation { deleteActivity(id: \\"%s\\") }"
+            }
+            """, testActivityId);
+
+        MvcResult deleteResult = mockMvc.perform(
+                        MockMvcRequestBuilders.post("/graphql")
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(deleteMutation))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String deleteResponseBody = deleteResult.getResponse().getContentAsString();
+        JsonNode deleteRoot = objectMapper.readTree(deleteResponseBody);
+        boolean deleted = deleteRoot.path("data").path("deleteActivity").asBoolean();
+
+        assertTrue(deleted);
+
+        // Verify activity is deleted
+        assertTrue(reportingService.getActivity(testActivityId).isEmpty());
     }
 }
