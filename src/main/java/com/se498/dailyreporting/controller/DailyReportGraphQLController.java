@@ -6,9 +6,11 @@ import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.dto.ActivityEntryRequest;
 import com.se498.dailyreporting.dto.ActivityEntryResponse;
 import com.se498.dailyreporting.dto.DailyReportRequest;
+import com.se498.dailyreporting.service.DailyReportingService;
 import com.se498.dailyreporting.service.DailyReportingServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -29,7 +31,8 @@ import java.util.UUID;
 @Slf4j
 public class DailyReportGraphQLController {
 
-    private final DailyReportingServiceImpl reportingService;
+    @Autowired
+    private final DailyReportingService reportingService;
 
     // QUERY METHODS
 
