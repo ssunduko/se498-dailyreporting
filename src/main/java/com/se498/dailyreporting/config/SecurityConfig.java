@@ -3,6 +3,7 @@ package com.se498.dailyreporting.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -19,15 +20,13 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @Configuration
 @EnableWebSecurity
 @Slf4j
-public class SecurityConfig{
-
+public class SecurityConfig {
 
     @Value("${spring.security.user.name}")
     private String username;
 
     @Value("${spring.security.user.password}")
     private String password;
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,6 +40,10 @@ public class SecurityConfig{
                                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/graphiql/**")).permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/voyager/**")).permitAll()
+                                        .requestMatchers(new AntPathRequestMatcher("/altair/**")).permitAll()
+                                        .requestMatchers(new AntPathRequestMatcher("/playground/**")).permitAll()
+                                        // Allow access to the GraphQL endpoint for the tools to work
+                                        .requestMatchers(new AntPathRequestMatcher("/graphql/**")).permitAll()
                                         .anyRequest()
                                         .authenticated();
                             } catch (Exception e) {
@@ -52,8 +55,6 @@ public class SecurityConfig{
         http.httpBasic(Customizer.withDefaults());
         http.csrf(AbstractHttpConfigurer::disable);
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-
-
 
         return http.build();
     }
@@ -68,7 +69,6 @@ public class SecurityConfig{
 
     @Bean
     public WebSecurityCustomizer ignoringCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/actuator/prometheus" );
+        return (web) -> web.ignoring().requestMatchers("/actuator/prometheus");
     }
-
 }

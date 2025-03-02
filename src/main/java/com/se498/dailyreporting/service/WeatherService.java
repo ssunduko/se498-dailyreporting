@@ -15,6 +15,14 @@ public interface WeatherService {
     boolean isDangerous(WeatherRecord record);
 
     /**
+     * Determines if weather conditions are dangerous for specific purpose
+     * @param record The weather record to assess
+     * @param strategyType The specific purpose
+     * @return true if weather conditions are dangerous, false otherwise
+     */
+    boolean isDangerous(WeatherRecord record, WeatherStrategyFactory.StrategyType strategyType);
+
+    /**
      * Determines if weather is suitable for outdoor activities
      * @param record The weather record to assess
      * @return true if weather is good for outdoor activities, false otherwise
