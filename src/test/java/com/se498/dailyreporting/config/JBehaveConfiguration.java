@@ -20,14 +20,15 @@ import org.jbehave.core.steps.ParameterConverters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Base configuration for JBehave BDD tests
  */
+@Component
 @ComponentScan(basePackages = {"com.se498.dailyreporting.bdd.steps"})
 public abstract class JBehaveConfiguration extends JUnitStories {
 
@@ -83,25 +84,6 @@ public abstract class JBehaveConfiguration extends JUnitStories {
         }
         if (weatherSteps != null) {
             stepInstances.add(weatherSteps);
-        }
-
-        if (stepInstances.isEmpty()) {
-            System.err.println("WARNING: No step implementations were found or autowired!");
-        } else {
-            for (Object step : stepInstances) {
-                System.out.println("Adding step instance: " + step.getClass().getName());
-
-                // List annotated methods
-                System.out.println("Methods in " + step.getClass().getSimpleName() + ":");
-                for (java.lang.reflect.Method method : step.getClass().getMethods()) {
-                    if (method.isAnnotationPresent(org.jbehave.core.annotations.Given.class) ||
-                            method.isAnnotationPresent(org.jbehave.core.annotations.When.class) ||
-                            method.isAnnotationPresent(org.jbehave.core.annotations.Then.class)) {
-                        System.out.println("  " + method.getName() + " - Annotations: " +
-                                Arrays.toString(method.getDeclaredAnnotations()));
-                    }
-                }
-            }
         }
 
         return new InstanceStepsFactory(configuration(), stepInstances.toArray());
