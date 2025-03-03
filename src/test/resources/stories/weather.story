@@ -8,25 +8,25 @@ So that I can plan work activities accordingly and ensure safety
 
 Scenario: Retrieving current weather by zip code
 Given I am an authenticated user
-When I request current weather for zip code "10001" in country "US"
+When I request current weather for zip code '10001' in country 'US'
 Then I should receive valid weather information
 And the response should include temperature, humidity and wind speed
 
 Scenario: Retrieving current weather by city
 Given I am an authenticated user
-When I request current weather for city "New York" in country "US"
+When I request current weather for city 'New York' in country 'US'
 Then I should receive valid weather information
-And the location information should match "New York, US"
+And the location information should match 'New York, US'
 
 Scenario: Getting weather alerts
 Given I am an authenticated user
-When I request weather alerts for zip code "10001"
+When I request weather alerts for zip code '10001'
 Then I should receive a list of active weather alerts if any
 And the response should include alert count and severity information
 
 Scenario: Weather data caching
-Given the weather service has cached data for zip code "10001"
-When I request weather data for zip code "10001" within the cache validity period
+Given the weather service has cached data for zip code '10001'
+When I request weather data for zip code '10001' within the cache validity period
 Then the response should use cached data
 And the response should indicate it came from cache
 
