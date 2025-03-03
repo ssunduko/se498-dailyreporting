@@ -1,6 +1,5 @@
 package com.se498.dailyreporting.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se498.dailyreporting.domain.bo.*;
 import com.se498.dailyreporting.dto.WeatherMapper;
 import com.se498.dailyreporting.dto.WeatherRequest;
@@ -38,7 +37,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 @WebMvcTest(WeatherController.class)
 @DisplayName("Weather Controller Tests with Authentication")
-class WeatherControllerMockTest {
+class WeatherRestControllerMockTest {
 
     @Autowired
     private MockMvc mockMvc;

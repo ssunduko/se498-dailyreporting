@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.se498.dailyreporting.domain.bo.DailyReport;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
-import com.se498.dailyreporting.service.DailyReportingServiceImpl;
+import com.se498.dailyreporting.service.DailyReportingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class DailyReportGraphQLControllerMockTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private DailyReportingServiceImpl reportingService;
+    private DailyReportingService reportingService;
 
     @BeforeEach
     void setUp() {

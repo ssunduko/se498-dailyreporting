@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Weather Reporting Service Tests")
-class WeatherReportingServiceTest {
+class WeatherReportingServiceMockTest {
 
     @Mock
     private WeatherRecordRepository weatherRecordRepository;
