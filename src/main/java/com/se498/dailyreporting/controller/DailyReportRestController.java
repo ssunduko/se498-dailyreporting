@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Validated
 @Slf4j
 @Tag(name = "Daily Reports", description = "APIs for managing construction daily reports")
-public class DailyReportController {
+public class DailyReportRestController {
 
     @Autowired
     private final DailyReportingService reportingService;
