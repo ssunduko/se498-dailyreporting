@@ -6,23 +6,18 @@ import com.se498.dailyreporting.domain.vo.ActivityStatus;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.service.DailyReportingService;
 import lombok.Data;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ws.client.core.WebServiceTemplate;
 
 import jakarta.xml.bind.annotation.*;
-import org.springframework.ws.transport.http.HttpComponentsMessageSender;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@WithMockUser(username = "sergey", password = "chapman", roles = "ADMIN")
 public class DailyReportSoapControllerIntegrationTest {
 
     @LocalServerPort
@@ -45,12 +39,6 @@ public class DailyReportSoapControllerIntegrationTest {
 
     @Autowired
     private DailyReportingService reportingService;
-
-    @Value("${spring.security.user.name:sergey}")
-    private String securityUsername;
-
-    @Value("${spring.security.user.password:chapman}")
-    private String securityPassword;
 
     private WebServiceTemplate webServiceTemplate;
     private String projectId;
@@ -493,66 +481,56 @@ public class DailyReportSoapControllerIntegrationTest {
 
     @BeforeEach
     public void setUp() {
+        // Set up WebServiceTemplate for SOAP requests
+        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+
+        // Set classes to be bound explicitly
+        marshaller.setClassesToBeBound(
+                // Response classes
+                DailyReportSoapResponse.class,
+                ActivitySoapResponse.class,
+                ActivitySoapRequest.class,
+                ServiceResponse.class,
+                ReportListResponse.class,
+                ActivityListResponse.class,
+                ProgressResponse.class,
+                CompletionResponse.class,
+                DurationResponse.class,
+
+                // Request classes
+                GetReportRequest.class,
+                CreateReportRequest.class,
+                UpdateReportRequest.class,
+                SubmitReportRequest.class,
+                GetActivitiesByReportRequest.class,
+                GetReportProgressRequest.class,
+                IsReportCompleteRequest.class,
+                UpdateActivityProgressRequest.class,
+                GetReportsByProjectRequest.class,
+                GetReportsByStatusRequest.class,
+                DeleteActivityRequest.class,
+                DeleteReportRequest.class
+        );
+
         try {
-            // Set up WebServiceTemplate for SOAP requests
-            Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-
-            // Set classes to be bound explicitly
-            marshaller.setClassesToBeBound(
-                    // Response classes
-                    DailyReportSoapResponse.class,
-                    ActivitySoapResponse.class,
-                    ActivitySoapRequest.class,
-                    ServiceResponse.class,
-                    ReportListResponse.class,
-                    ActivityListResponse.class,
-                    ProgressResponse.class,
-                    CompletionResponse.class,
-                    DurationResponse.class,
-
-                    // Request classes
-                    GetReportRequest.class,
-                    CreateReportRequest.class,
-                    UpdateReportRequest.class,
-                    SubmitReportRequest.class,
-                    GetActivitiesByReportRequest.class,
-                    GetReportProgressRequest.class,
-                    IsReportCompleteRequest.class,
-                    UpdateActivityProgressRequest.class,
-                    GetReportsByProjectRequest.class,
-                    GetReportsByStatusRequest.class,
-                    DeleteActivityRequest.class,
-                    DeleteReportRequest.class
-            );
-
             marshaller.afterPropertiesSet();
             System.out.println("Marshaller setup successful");
-
-            // Create WebServiceTemplate with authentication
-            webServiceTemplate = new WebServiceTemplate(marshaller);
-            webServiceTemplate.setDefaultUri("http://localhost:" + port + "/soap/DailyReportService");
-
-
-            // Add Basic Authentication
-            /*HttpComponentsMessageSender messageSender = new HttpComponentsMessageSender();
-            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(securityUsername, securityPassword);
-            messageSender.setCredentials(credentials);
-            webServiceTemplate.setMessageSender(messageSender);*/
-
-            System.out.println("Configured authentication with user: " + securityUsername);
-
-            // Create test project ID
-            projectId = "test-project-" + UUID.randomUUID();
-
-            // Create a test report via service
-            DailyReport report = createTestReport();
-            reportId = report.getId();
-
-            System.out.println("Test setup complete. Project ID: " + projectId + ", Report ID: " + reportId);
         } catch (Exception e) {
             e.printStackTrace();
-            fail("Test setup failed: " + e.getMessage());
+            fail("Failed to set up marshaller: " + e.getMessage());
         }
+
+        webServiceTemplate = new WebServiceTemplate(marshaller);
+        webServiceTemplate.setDefaultUri("http://localhost:" + port + "/soap/DailyReportService");
+
+        // Create test project ID
+        projectId = "test-project-" + UUID.randomUUID();
+
+        // Create a test report via service
+        DailyReport report = createTestReport();
+        reportId = report.getId();
+
+        System.out.println("Test setup complete. Project ID: " + projectId + ", Report ID: " + reportId);
     }
 
     /**
@@ -710,7 +688,37 @@ public class DailyReportSoapControllerIntegrationTest {
     }
 
     @Test
-    public void testAddAndDeleteActivity() {
+    public void testSubmitReport() {
+        try {
+            // Add an activity to the report to make it submittable
+            createTestActivity(reportId);
+
+            // Create request object
+            SubmitReportRequest request = new SubmitReportRequest(reportId, username);
+
+            // Debug XML output
+            System.out.println("Request XML: " + marshalToXml(request));
+
+            // Execute the SOAP request
+            Object responseObj = webServiceTemplate.marshalSendAndReceive(request);
+
+            // Verify the response
+            assertNotNull(responseObj, "Response should not be null");
+            assertTrue(responseObj instanceof DailyReportSoapResponse, "Should return DailyReportSoapResponse");
+
+            DailyReportSoapResponse response = (DailyReportSoapResponse) responseObj;
+            assertTrue(response.isSuccess(), "Response should indicate success");
+            assertEquals(reportId, response.getId(), "Response should contain the correct report ID");
+            assertEquals(ReportStatus.SUBMITTED.name(), response.getStatus(), "Report status should be SUBMITTED");
+            assertEquals(username, response.getUpdatedBy(), "Report should be updated by the test user");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Test failed: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testAddActivity() {
         try {
             // Create activity data
             LocalDateTime startTime = LocalDateTime.now().minusHours(3);
@@ -747,23 +755,87 @@ public class DailyReportSoapControllerIntegrationTest {
             ActivitySoapResponse response = (ActivitySoapResponse) responseObj;
             assertTrue(response.isSuccess(), "Response should indicate success");
             assertNotNull(response.getId(), "Response should contain an activity ID");
+            assertEquals(reportId, response.getReportId(), "Response should contain the correct report ID");
+            assertEquals(description, response.getDescription(), "Response should contain the correct description");
+            assertEquals(category, response.getCategory(), "Response should contain the correct category");
+            assertEquals(progress, response.getProgress(), "Response should contain the correct progress");
+            assertEquals(ActivityStatus.IN_PROGRESS.name(), response.getStatus(), "Activity status should be IN_PROGRESS");
+            assertEquals(notes, response.getNotes(), "Response should contain the correct notes");
+            assertEquals(personnel, response.getPersonnel(), "Response should contain the correct personnel");
+            assertEquals(username, response.getCreatedBy(), "Activity should be created by the test user");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Test failed: " + e.getMessage());
+        }
+    }
 
-            // Now let's delete the activity to clean up
-            String activityId = response.getId();
-            DeleteActivityRequest deleteRequest = new DeleteActivityRequest(activityId);
+    @Test
+    public void testUpdateActivityProgress() {
+        try {
+            // Create a test activity
+            ActivityEntry activity = createTestActivity(reportId);
+            double newProgress = 85.0;
 
-            // Execute delete request
-            Object deleteResponseObj = webServiceTemplate.marshalSendAndReceive(deleteRequest);
-            assertNotNull(deleteResponseObj, "Delete response should not be null");
-            assertTrue(deleteResponseObj instanceof ServiceResponse, "Should return ServiceResponse");
+            // Create request object
+            UpdateActivityProgressRequest request = new UpdateActivityProgressRequest(
+                    activity.getId(),
+                    newProgress,
+                    username
+            );
 
-            ServiceResponse deleteResponse = (ServiceResponse) deleteResponseObj;
-            assertTrue(deleteResponse.isSuccess(), "Delete response should indicate success");
+            // Debug XML output
+            System.out.println("Request XML: " + marshalToXml(request));
 
-            // Verify activity was deleted
-            Optional<ActivityEntry> deletedActivity = reportingService.getActivity(activityId);
-            assertFalse(deletedActivity.isPresent(), "Activity should be deleted from database");
+            // Execute the SOAP request
+            Object responseObj = webServiceTemplate.marshalSendAndReceive(request);
 
+            // Verify the response
+            assertNotNull(responseObj, "Response should not be null");
+            assertTrue(responseObj instanceof ActivitySoapResponse, "Should return ActivitySoapResponse");
+
+            ActivitySoapResponse response = (ActivitySoapResponse) responseObj;
+            assertTrue(response.isSuccess(), "Response should indicate success");
+            assertEquals(activity.getId(), response.getId(), "Response should contain the correct activity ID");
+            assertEquals(newProgress, response.getProgress(), 0.01, "Response should contain the updated progress");
+
+            // Verify the update in the database
+            Optional<ActivityEntry> updatedActivity = reportingService.getActivity(activity.getId());
+            assertTrue(updatedActivity.isPresent(), "Activity should exist in the database");
+            assertEquals(newProgress, updatedActivity.get().getProgress(), 0.01, "Activity progress should be updated in the database");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Test failed: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testGetActivitiesByReport() {
+        try {
+            // Create a test activity
+            ActivityEntry activity = createTestActivity(reportId);
+
+            // Create request object
+            GetActivitiesByReportRequest request = new GetActivitiesByReportRequest(reportId);
+
+            // Debug XML output
+            System.out.println("Request XML: " + marshalToXml(request));
+
+            // Execute the SOAP request
+            Object responseObj = webServiceTemplate.marshalSendAndReceive(request);
+
+            // Verify the response
+            assertNotNull(responseObj, "Response should not be null");
+            assertTrue(responseObj instanceof ActivityListResponse, "Should return ActivityListResponse");
+
+            ActivityListResponse response = (ActivityListResponse) responseObj;
+            assertTrue(response.isSuccess(), "Response should indicate success");
+            assertTrue(response.getActivityCount() > 0, "Response should contain at least one activity");
+            assertNotNull(response.getActivities(), "Response should contain an activities list");
+            assertFalse(response.getActivities().isEmpty(), "Activities list should not be empty");
+
+            // Check the first activity
+            ActivitySoapResponse activityResponse = response.getActivities().get(0);
+            assertEquals(reportId, activityResponse.getReportId(), "Activity should belong to the correct report");
         } catch (Exception e) {
             e.printStackTrace();
             fail("Test failed: " + e.getMessage());
@@ -789,10 +861,10 @@ public class DailyReportSoapControllerIntegrationTest {
             ReportListResponse response = (ReportListResponse) responseObj;
             assertTrue(response.isSuccess(), "Response should indicate success");
             assertTrue(response.getReportCount() > 0, "Response should contain at least one report");
-            assertNotNull(response.getReports(), "Response should contain report list");
-            assertFalse(response.getReports().isEmpty(), "Report list should not be empty");
+            assertNotNull(response.getReports(), "Response should contain a reports list");
+            assertFalse(response.getReports().isEmpty(), "Reports list should not be empty");
 
-            // At least one report should match our test report
+            // Check if our test report is in the list
             boolean foundTestReport = response.getReports().stream()
                     .anyMatch(report -> report.getId().equals(reportId));
             assertTrue(foundTestReport, "Response should contain the test report");
@@ -803,18 +875,13 @@ public class DailyReportSoapControllerIntegrationTest {
     }
 
     @Test
-    public void testDeleteReport() {
+    public void testDeleteActivity() {
         try {
-            // First create a temporary report to delete
-            String tempProjectId = "temp-project-" + UUID.randomUUID();
-            DailyReport tempReport = reportingService.createReport(
-                    tempProjectId,
-                    LocalDate.now(),
-                    username
-            );
+            // Create a test activity
+            ActivityEntry activity = createTestActivity(reportId);
 
             // Create request object
-            DeleteReportRequest request = new DeleteReportRequest(tempReport.getId());
+            DeleteActivityRequest request = new DeleteActivityRequest(activity.getId());
 
             // Debug XML output
             System.out.println("Request XML: " + marshalToXml(request));
@@ -829,9 +896,9 @@ public class DailyReportSoapControllerIntegrationTest {
             ServiceResponse response = (ServiceResponse) responseObj;
             assertTrue(response.isSuccess(), "Response should indicate success");
 
-            // Verify the report was deleted
-            Optional<DailyReport> deletedReport = reportingService.getReport(tempReport.getId());
-            assertFalse(deletedReport.isPresent(), "Report should be deleted from database");
+            // Verify the activity was deleted
+            Optional<ActivityEntry> deletedActivity = reportingService.getActivity(activity.getId());
+            assertFalse(deletedActivity.isPresent(), "Activity should be deleted from the database");
         } catch (Exception e) {
             e.printStackTrace();
             fail("Test failed: " + e.getMessage());
