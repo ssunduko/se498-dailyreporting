@@ -14,16 +14,21 @@ import jakarta.xml.bind.Unmarshaller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.ws.client.core.WebServiceTemplate;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -40,6 +45,8 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Daily Report SOAP Controller Integration Tests with MockMvc")
+@ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 public class DailyReportSoapControllerMvcMockTest {
 
     @Autowired
@@ -59,51 +66,14 @@ public class DailyReportSoapControllerMvcMockTest {
     // JAXB contexts for marshalling/unmarshalling
     private JAXBContext jaxbContext;
 
+    private WebServiceTemplate template;
+
     @BeforeEach
-    void setUp() throws JAXBException {
-        // Create test data
-        testReportId = UUID.randomUUID().toString();
-        testActivityId = UUID.randomUUID().toString();
-        testProjectId = "test-project-" + UUID.randomUUID();
-        testReportDate = LocalDate.now();
-        testUsername = "test-user";
-
-        // Create test report
-        testReport = new DailyReport();
-        testReport.setId(testReportId);
-        testReport.setProjectId(testProjectId);
-        testReport.setReportDate(testReportDate);
-        testReport.setStatus(ReportStatus.DRAFT);
-        testReport.setNotes("Test notes");
-        testReport.setCreatedAt(LocalDateTime.now());
-        testReport.setCreatedBy(testUsername);
-
-        // Create test activity
-        testActivity = new ActivityEntry();
-        testActivity.setId(testActivityId);
-        testActivity.setReportId(testReportId);
-        testActivity.setDescription("Test activity");
-        testActivity.setCategory("Test category");
-        testActivity.setStartTime(LocalDateTime.now().minusHours(2));
-        testActivity.setEndTime(LocalDateTime.now().minusHours(1));
-        testActivity.setProgress(50.0);
-        testActivity.setStatus(ActivityStatus.IN_PROGRESS);
-        testActivity.setPersonnel(new HashSet<>(Arrays.asList("person1", "person2")));
-        testActivity.setCreatedAt(LocalDateTime.now());
-        testActivity.setCreatedBy(testUsername);
-
-        // Initialize JAXB context for soap DTOs
-        jaxbContext = JAXBContext.newInstance(
-                DailyReportSoapResponse.class,
-                ReportListResponse.class,
-                ActivitySoapResponse.class,
-                ActivityListResponse.class,
-                ActivitySoapRequest.class,
-                ServiceResponse.class,
-                ProgressResponse.class,
-                CompletionResponse.class,
-                DurationResponse.class
-        );
+    void setUp() {
+        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+        marshaller.setContextPath("com.se498.dailyreporting.dto.soap");
+        template = new WebServiceTemplate(marshaller);
+        template.setDefaultUri("http://localhost:8080/soap/DailyReportService");
     }
 
     @Test
