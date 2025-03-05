@@ -44,6 +44,7 @@ public class SecurityConfig {
                                         .requestMatchers(new AntPathRequestMatcher("/playground/**")).permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/ws/**")).permitAll()
                                         .requestMatchers(new AntPathRequestMatcher("/soap/**")).permitAll()
+                                        .requestMatchers(new AntPathRequestMatcher("/services/**")).permitAll()
                                         // Allow access to the GraphQL endpoint for the tools to work
                                         .requestMatchers(new AntPathRequestMatcher("/graphql/**")).permitAll()
                                         .anyRequest()

@@ -2,6 +2,8 @@ package com.se498.dailyreporting.controller;
 
 
 import com.se498.dailyreporting.domain.bo.DailyReport;
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,12 +36,11 @@ public class SimplifiedSoapTest {
     @Autowired
     private DailyReportingService reportingService;
 
-    private WebServiceTemplate webServiceTemplate;
-    private String projectId;
     private String reportId;
-    private String username = "test-user";
 
     // A simple JAXB class for testing the marshaller
+    @Setter
+    @Getter
     @XmlRootElement(name = "getReport", namespace = "http://reporting.construction.com/soap")
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class GetReportRequest {
@@ -52,11 +53,10 @@ public class SimplifiedSoapTest {
             this.reportId = reportId;
         }
 
-        public String getReportId() { return reportId; }
-        public void setReportId(String reportId) { this.reportId = reportId; }
     }
 
     // A simple response class for testing
+    @Getter
     @XmlRootElement(name = "getReportResponse", namespace = "http://reporting.construction.com/soap")
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class GetReportResponse {
@@ -68,10 +68,8 @@ public class SimplifiedSoapTest {
 
         public GetReportResponse() {}
 
-        public boolean isSuccess() { return success; }
         public void setSuccess(boolean success) { this.success = success; }
 
-        public String getMessage() { return message; }
         public void setMessage(String message) { this.message = message; }
     }
 
@@ -89,13 +87,14 @@ public class SimplifiedSoapTest {
 
             marshaller.afterPropertiesSet();
 
-            webServiceTemplate = new WebServiceTemplate(marshaller);
+            WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller);
             webServiceTemplate.setDefaultUri("http://localhost:" + port + "/soap/DailyReportService");
 
             // Create test project ID
-            projectId = "test-project-" + UUID.randomUUID();
+            String projectId = "test-project-" + UUID.randomUUID();
 
             // Create a test report via service
+            String username = "test-user";
             DailyReport report = reportingService.createReport(
                     projectId,
                     LocalDate.now(),

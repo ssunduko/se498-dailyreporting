@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://se498.com/dailyreporting/soap"
+           targetNamespace="http://se498.com/dailyreporting/soap"
+           elementFormDefault="qualified">
+
+    <!-- Basic Types -->
+    <xs:element name="date" type="xs:date"/>
+    <xs:element name="dateTime" type="xs:dateTime"/>
+
+    <!-- Report Status Enumeration -->
+    <xs:simpleType name="ReportStatus">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="DRAFT"/>
+            <xs:enumeration value="SUBMITTED"/>
+            <xs:enumeration value="APPROVED"/>
+            <xs:enumeration value="REJECTED"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Activity Status Enumeration -->
+    <xs:simpleType name="ActivityStatus">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="PLANNED"/>
+            <xs:enumeration value="IN_PROGRESS"/>
+            <xs:enumeration value="COMPLETED"/>
+            <xs:enumeration value="DELAYED"/>
+            <xs:enumeration value="CANCELLED"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Activity Entry Type -->
+    <xs:complexType name="ActivityEntry">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="reportId" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+            <xs:element name="category" type="xs:string"/>
+            <xs:element name="startTime" type="xs:dateTime"/>
+            <xs:element name="endTime" type="xs:dateTime"/>
+            <xs:element name="progress" type="xs:double"/>
+            <xs:element name="status" type="tns:ActivityStatus"/>
+            <xs:element name="notes" type="xs:string" minOccurs="0"/>
+            <xs:element name="personnel" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="person" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="createdAt" type="xs:dateTime"/>
+            <xs:element name="createdBy" type="xs:string"/>
+            <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+            <xs:element name="updatedBy" type="xs:string" minOccurs="0"/>
+            <xs:element name="durationMinutes" type="xs:long"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Daily Report Type -->
+    <xs:complexType name="DailyReport">
+        <xs:sequence>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="projectId" type="xs:string"/>
+            <xs:element name="reportDate" type="xs:date"/>
+            <xs:element name="status" type="tns:ReportStatus"/>
+            <xs:element name="notes" type="xs:string" minOccurs="0"/>
+            <xs:element name="activities" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="activity" type="tns:ActivityEntry" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="createdAt" type="xs:dateTime"/>
+            <xs:element name="createdBy" type="xs:string"/>
+            <xs:element name="updatedAt" type="xs:dateTime" minOccurs="0"/>
+            <xs:element name="updatedBy" type="xs:string" minOccurs="0"/>
+            <xs:element name="progress" type="xs:double"/>
+            <xs:element name="complete" type="xs:boolean"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Request/Response Types -->
+
+    <!-- Create Report -->
+    <xs:element name="createReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="projectId" type="xs:string"/>
+                <xs:element name="reportDate" type="xs:date"/>
+                <xs:element name="notes" type="xs:string" minOccurs="0"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="createReportResponse" type="tns:DailyReport"/>
+
+    <!-- Get Report -->
+    <xs:element name="getReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getReportResponse" type="tns:DailyReport"/>
+
+    <!-- Update Report -->
+    <xs:element name="updateReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+                <xs:element name="notes" type="xs:string" minOccurs="0"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updateReportResponse" type="tns:DailyReport"/>
+
+    <!-- Submit Report -->
+    <xs:element name="submitReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="submitReportResponse" type="tns:DailyReport"/>
+
+    <!-- Approve Report -->
+    <xs:element name="approveReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="approveReportResponse" type="tns:DailyReport"/>
+
+    <!-- Reject Report -->
+    <xs:element name="rejectReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+                <xs:element name="reason" type="xs:string"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="rejectReportResponse" type="tns:DailyReport"/>
+
+    <!-- Delete Report -->
+    <xs:element name="deleteReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteReportResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Reports By Project -->
+    <xs:element name="getReportsByProjectRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="projectId" type="xs:string"/>
+                <xs:element name="startDate" type="xs:date" minOccurs="0"/>
+                <xs:element name="endDate" type="xs:date" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getReportsByProjectResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reports" type="tns:DailyReport" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Reports By Status -->
+    <xs:element name="getReportsByStatusRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:ReportStatus"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getReportsByStatusResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reports" type="tns:DailyReport" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Activity Operations -->
+
+    <!-- Add Activity -->
+    <xs:element name="addActivityRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="category" type="xs:string"/>
+                <xs:element name="startTime" type="xs:dateTime"/>
+                <xs:element name="endTime" type="xs:dateTime"/>
+                <xs:element name="progress" type="xs:double"/>
+                <xs:element name="status" type="tns:ActivityStatus"/>
+                <xs:element name="notes" type="xs:string" minOccurs="0"/>
+                <xs:element name="personnel" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="person" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="addActivityResponse" type="tns:ActivityEntry"/>
+
+    <!-- Get Activity -->
+    <xs:element name="getActivityRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="activityId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getActivityResponse" type="tns:ActivityEntry"/>
+
+    <!-- Get Activities By Report -->
+    <xs:element name="getActivitiesByReportRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getActivitiesByReportResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="activities" type="tns:ActivityEntry" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Update Activity -->
+    <xs:element name="updateActivityRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="activityId" type="xs:string"/>
+                <xs:element name="description" type="xs:string"/>
+                <xs:element name="category" type="xs:string"/>
+                <xs:element name="startTime" type="xs:dateTime"/>
+                <xs:element name="endTime" type="xs:dateTime"/>
+                <xs:element name="progress" type="xs:double"/>
+                <xs:element name="status" type="tns:ActivityStatus"/>
+                <xs:element name="notes" type="xs:string" minOccurs="0"/>
+                <xs:element name="personnel" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="person" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updateActivityResponse" type="tns:ActivityEntry"/>
+
+    <!-- Update Activity Progress -->
+    <xs:element name="updateActivityProgressRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="activityId" type="xs:string"/>
+                <xs:element name="progress" type="xs:double"/>
+                <xs:element name="username" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updateActivityProgressResponse" type="tns:ActivityEntry"/>
+
+    <!-- Delete Activity -->
+    <xs:element name="deleteActivityRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="activityId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteActivityResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="success" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Report Progress -->
+    <xs:element name="getReportProgressRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getReportProgressResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="progress" type="xs:double"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Is Report Complete -->
+    <xs:element name="isReportCompleteRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="isReportCompleteResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="isComplete" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Total Duration -->
+    <xs:element name="getTotalDurationRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="reportId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getTotalDurationResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="durationMinutes" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
