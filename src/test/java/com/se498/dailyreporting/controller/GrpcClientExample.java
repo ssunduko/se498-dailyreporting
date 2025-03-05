@@ -2,7 +2,6 @@ package com.se498.dailyreporting.controller;
 
 
 import com.google.protobuf.StringValue;
-import com.se498.dailyreporting.client.AuthenticationInterceptor;
 import com.se498.dailyreporting.grpc.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -30,7 +29,6 @@ public class GrpcClientExample {
         // Create the channel
         channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext() // For development only, use TLS in production
-                .intercept(new AuthenticationInterceptor(username, password))
                 .build();
 
         // Create the stub
@@ -138,8 +136,8 @@ public class GrpcClientExample {
         // Default values
         String host = "localhost";
         int port = 9090;
-        String username = "admin";
-        String password = "password";
+        String username = "sergey";
+        String password = "chapman";
 
         // Create the client
         GrpcClientExample client = new GrpcClientExample(host, port, username, password);
