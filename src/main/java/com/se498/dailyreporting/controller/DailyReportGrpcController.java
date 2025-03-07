@@ -8,10 +8,12 @@ import com.se498.dailyreporting.domain.vo.ActivityStatus;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.grpc.*;
 import com.se498.dailyreporting.service.DailyReportingService;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
@@ -38,30 +40,35 @@ public class DailyReportGrpcController extends DailyReportingServiceGrpc.DailyRe
 
     @Override
     public void createReport(CreateReportRequest request, StreamObserver<DailyReportResponse> responseObserver) {
-        log.info("gRPC: Creating daily report for project {}, date {}",
-                request.getProjectId(), toLocalDate(request.getReportDate()));
-
-        DailyReport report = reportingService.createReport(
-                request.getProjectId(),
-                toLocalDate(request.getReportDate()),
-                request.getUsername()
-        );
-
-        // Update notes if provided
-        if (request.hasNotes()) {
-            report = reportingService.updateReport(
-                    report.getId(),
-                    request.getNotes().getValue(),
+        try {
+            DailyReport report = reportingService.createReport(
+                    request.getProjectId(),
+                    toLocalDate(request.getReportDate()),
                     request.getUsername()
             );
+
+            if (request.hasNotes()) {
+                report = reportingService.updateReport(
+                        report.getId(),
+                        request.getNotes().getValue(),
+                        request.getUsername()
+                );
+            }
+
+            // Force initialization of the activities collection
+            Hibernate.initialize(report.getActivities());
+
+            DailyReportResponse response = DailyReportResponse.newBuilder()
+                    .setReport(toDailyReportProto(report))
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("Error in createReport", e);
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
-
-        DailyReportResponse response = DailyReportResponse.newBuilder()
-                .setReport(toDailyReportProto(report))
-                .build();
-
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
     }
 
     @Override
