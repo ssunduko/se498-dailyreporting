@@ -1,4 +1,4 @@
-package com.se498.dailyreporting.client;
+package com.se498.dailyreporting.controller;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;

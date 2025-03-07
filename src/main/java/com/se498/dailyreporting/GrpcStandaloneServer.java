@@ -1,17 +1,20 @@
-package com.se498.dailyreporting.config;
+package com.se498.dailyreporting;
 
+import com.se498.dailyreporting.config.GrpcServerConfig;
 import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.bo.DailyReport;
-import com.se498.dailyreporting.domain.vo.ActivityStatus;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.dto.grpc.GrpcMapper;
 import com.se498.dailyreporting.grpc.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.protobuf.services.HealthStatusManager;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -21,12 +24,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Standalone gRPC server that doesn't rely on Spring Boot.
- * This implements a simple in-memory version of the service.
+ * gRPC server that integrates with Spring Boot lifecycle
  */
-public class GrpcStandaloneServer {
-    private final int port;
-    private final Server server;
+@Slf4j
+@Component
+public class GrpcStandaloneServer implements InitializingBean, DisposableBean {
+
+    private final GrpcServerConfig config;
+    private Server server;
+
+    public GrpcStandaloneServer(GrpcServerConfig config) {
+        this.config = config;
+    }
 
     // In-memory storage
     private final Map<String, DailyReport> reports = new ConcurrentHashMap<>();
@@ -36,36 +45,76 @@ public class GrpcStandaloneServer {
     private final GrpcMapper mapper = new GrpcMapper();
 
     /**
-     * Create a standalone gRPC server
+     * Initialize the gRPC server when the Spring application starts
      */
-    public GrpcStandaloneServer(int port) {
-        this.port = port;
-        HealthStatusManager healthStatusManager = new HealthStatusManager();
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        log.info("Initializing gRPC server on port {}", config.getPort());
+        try {
+            // Disable Epoll native transport on non-Linux platforms
+            if (!System.getProperty("os.name", "").toLowerCase().contains("linux")) {
+                log.info("Non-Linux OS detected. Disabling Netty's native transport.");
+                System.setProperty("io.grpc.netty.shaded.io.netty.transport.noNative", "true");
+            }
 
-        server = ServerBuilder.forPort(port)
-                .addService(new DailyReportServiceImpl())
-                .addService(healthStatusManager.getHealthService())
-                .addService(ProtoReflectionService.newInstance())
-                .build();
+            start();
+        } catch (Exception e) {
+            log.error("Failed to start gRPC server: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Clean up the gRPC server when the Spring application stops
+     */
+    @Override
+    public void destroy() throws Exception {
+        log.info("Shutting down gRPC server");
+        stop();
     }
 
     /**
      * Start the server
      */
     public void start() throws IOException {
-        server.start();
-        System.out.println("Server started, listening on port " + port);
+        if (!config.isEnabled()) {
+            log.info("gRPC server is disabled. Not starting.");
+            return;
+        }
 
-        // Add shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down gRPC server due to JVM shutdown");
-            try {
-                GrpcStandaloneServer.this.stop();
-            } catch (InterruptedException e) {
-                e.printStackTrace(System.err);
-            }
-            System.out.println("Server shut down");
-        }));
+        HealthStatusManager healthStatusManager = new HealthStatusManager();
+
+        // Configure native transport based on configuration
+        if (!config.isUseNativeTransport()) {
+            log.info("Disabling Netty's native transport per configuration");
+            System.setProperty("io.grpc.netty.shaded.io.netty.transport.noNative", "true");
+        }
+
+        server = ServerBuilder.forPort(config.getPort())
+                .addService(new DailyReportServiceImpl())
+                .addService(healthStatusManager.getHealthService())
+                .addService(ProtoReflectionService.newInstance())
+                .maxInboundMessageSize(config.getMaxInboundMessageSize())
+                .build();
+
+        try {
+            server.start();
+            log.info("gRPC Server started successfully, listening on port {}", config.getPort());
+
+            // Add shutdown hook as a backup
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Shutting down gRPC server due to JVM shutdown");
+                try {
+                    GrpcStandaloneServer.this.stop();
+                } catch (InterruptedException e) {
+                    log.error("Error shutting down gRPC server", e);
+                }
+                log.info("gRPC Server shut down");
+            }));
+        } catch (IOException e) {
+            log.error("Failed to start gRPC server: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -73,38 +122,10 @@ public class GrpcStandaloneServer {
      */
     public void stop() throws InterruptedException {
         if (server != null) {
-            server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+            log.info("Gracefully shutting down gRPC server...");
+            server.shutdown().awaitTermination(config.getShutdownGraceSeconds(), TimeUnit.SECONDS);
+            log.info("gRPC server shutdown completed");
         }
-    }
-
-    /**
-     * Await termination on the main thread
-     */
-    public void blockUntilShutdown() throws InterruptedException {
-        if (server != null) {
-            server.awaitTermination();
-        }
-    }
-
-    /**
-     * Main method to start the server
-     */
-    public static void main(String[] args) throws Exception {
-        // Use port 9090 by default
-        int port = 9090;
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        }
-
-        // Force IPv4
-        System.setProperty("java.net.preferIPv4Stack", "true");
-
-        // Create and start the server
-        final GrpcStandaloneServer server = new GrpcStandaloneServer(port);
-        server.start();
-
-        // Keep the server running
-        server.blockUntilShutdown();
     }
 
     /**
@@ -115,7 +136,7 @@ public class GrpcStandaloneServer {
         @Override
         public void createReport(CreateReportRequest request, StreamObserver<DailyReportResponse> responseObserver) {
             try {
-                System.out.println("Creating report for project: " + request.getProjectId());
+                log.debug("Creating report for project: {}", request.getProjectId());
 
                 // Create a new report
                 String reportId = UUID.randomUUID().toString();
@@ -141,11 +162,10 @@ public class GrpcStandaloneServer {
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
 
-                System.out.println("Created report with ID: " + reportId);
+                log.debug("Created report with ID: {}", reportId);
 
             } catch (Exception e) {
-                System.err.println("Error creating report: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error creating report: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error creating report: " + e.getMessage())
                         .asRuntimeException());
@@ -156,7 +176,7 @@ public class GrpcStandaloneServer {
         public void getReport(GetReportRequest request, StreamObserver<DailyReportResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Getting report with ID: " + reportId);
+                log.debug("Getting report with ID: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -173,8 +193,7 @@ public class GrpcStandaloneServer {
                 responseObserver.onCompleted();
 
             } catch (Exception e) {
-                System.err.println("Error getting report: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error getting report: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error getting report: " + e.getMessage())
                         .asRuntimeException());
@@ -185,7 +204,7 @@ public class GrpcStandaloneServer {
         public void addActivity(AddActivityRequest request, StreamObserver<ActivityResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Adding activity to report: " + reportId);
+                log.debug("Adding activity to report: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -230,11 +249,10 @@ public class GrpcStandaloneServer {
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
 
-                System.out.println("Added activity with ID: " + activityId);
+                log.debug("Added activity with ID: {}", activityId);
 
             } catch (Exception e) {
-                System.err.println("Error adding activity: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error adding activity: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error adding activity: " + e.getMessage())
                         .asRuntimeException());
@@ -245,7 +263,7 @@ public class GrpcStandaloneServer {
         public void submitReport(SubmitReportRequest request, StreamObserver<DailyReportResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Submitting report with ID: " + reportId);
+                log.debug("Submitting report with ID: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -266,11 +284,10 @@ public class GrpcStandaloneServer {
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
 
-                System.out.println("Submitted report with ID: " + reportId);
+                log.debug("Submitted report with ID: {}", reportId);
 
             } catch (Exception e) {
-                System.err.println("Error submitting report: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error submitting report: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error submitting report: " + e.getMessage())
                         .asRuntimeException());
@@ -282,7 +299,7 @@ public class GrpcStandaloneServer {
                                           StreamObserver<ActivityListResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Getting activities for report: " + reportId);
+                log.debug("Getting activities for report: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -307,8 +324,7 @@ public class GrpcStandaloneServer {
                 responseObserver.onCompleted();
 
             } catch (Exception e) {
-                System.err.println("Error getting activities: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error getting activities: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error getting activities: " + e.getMessage())
                         .asRuntimeException());
@@ -320,7 +336,7 @@ public class GrpcStandaloneServer {
                                       StreamObserver<DoubleResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Getting progress for report: " + reportId);
+                log.debug("Getting progress for report: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -342,8 +358,7 @@ public class GrpcStandaloneServer {
                 responseObserver.onCompleted();
 
             } catch (Exception e) {
-                System.err.println("Error getting report progress: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error getting report progress: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error getting report progress: " + e.getMessage())
                         .asRuntimeException());
@@ -355,7 +370,7 @@ public class GrpcStandaloneServer {
                                      StreamObserver<BooleanResponse> responseObserver) {
             try {
                 String reportId = request.getReportId();
-                System.out.println("Checking if report is complete: " + reportId);
+                log.debug("Checking if report is complete: {}", reportId);
 
                 // Find the report
                 DailyReport report = reports.get(reportId);
@@ -377,8 +392,7 @@ public class GrpcStandaloneServer {
                 responseObserver.onCompleted();
 
             } catch (Exception e) {
-                System.err.println("Error checking report completion: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error checking report completion: {}", e.getMessage(), e);
                 responseObserver.onError(io.grpc.Status.INTERNAL
                         .withDescription("Error checking report completion: " + e.getMessage())
                         .asRuntimeException());

@@ -1,4 +1,4 @@
-package com.se498.dailyreporting.client;
+package com.se498.dailyreporting.controller;
 
 import com.google.protobuf.StringValue;
 import com.se498.dailyreporting.grpc.*;
