@@ -1,0 +1,245 @@
+syntax = "proto3";
+
+package com.se498.dailyreporting.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.se498.dailyreporting.grpc";
+option java_outer_classname = "DailyReportProto";
+
+// Import Google's well-known type definitions
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+// Service definition for Daily Report gRPC API
+service DailyReportService {
+  // Report Operations
+  rpc CreateReport (CreateReportRequest) returns (DailyReportResponse);
+  rpc GetReport (GetReportRequest) returns (DailyReportResponse);
+  rpc UpdateReport (UpdateReportRequest) returns (DailyReportResponse);
+  rpc SubmitReport (SubmitReportRequest) returns (DailyReportResponse);
+  rpc ApproveReport (ApproveReportRequest) returns (DailyReportResponse);
+  rpc RejectReport (RejectReportRequest) returns (DailyReportResponse);
+  rpc DeleteReport (DeleteReportRequest) returns (BooleanResponse);
+  rpc GetReportsByProject (GetReportsByProjectRequest) returns (ReportListResponse);
+  rpc GetReportsByStatus (GetReportsByStatusRequest) returns (ReportListResponse);
+
+  // Activity Operations
+  rpc AddActivity (AddActivityRequest) returns (ActivityResponse);
+  rpc GetActivity (GetActivityRequest) returns (ActivityResponse);
+  rpc GetActivitiesByReport (GetActivitiesByReportRequest) returns (ActivityListResponse);
+  rpc UpdateActivity (UpdateActivityRequest) returns (ActivityResponse);
+  rpc UpdateActivityProgress (UpdateActivityProgressRequest) returns (ActivityResponse);
+  rpc DeleteActivity (DeleteActivityRequest) returns (BooleanResponse);
+
+  // Report Analytics
+  rpc GetReportProgress (GetReportProgressRequest) returns (DoubleResponse);
+  rpc IsReportComplete (IsReportCompleteRequest) returns (BooleanResponse);
+  rpc GetTotalDuration (GetTotalDurationRequest) returns (LongResponse);
+}
+
+// Date message (since Protocol Buffers doesn't have a built-in date type)
+message Date {
+  int32 year = 1;
+  int32 month = 2;
+  int32 day = 3;
+}
+
+// Enum for Report Status
+enum ReportStatus {
+  DRAFT = 0;
+  SUBMITTED = 1;
+  APPROVED = 2;
+  REJECTED = 3;
+}
+
+// Enum for Activity Status
+enum ActivityStatus {
+  PLANNED = 0;
+  IN_PROGRESS = 1;
+  COMPLETED = 2;
+  DELAYED = 3;
+  CANCELLED = 4;
+}
+
+// Daily Report message
+message DailyReportResponse {
+  string id = 1;
+  string project_id = 2;
+  Date report_date = 3;
+  ReportStatus status = 4;
+  google.protobuf.StringValue notes = 5;
+  repeated ActivityResponse activities = 6;
+  google.protobuf.Timestamp created_at = 7;
+  string created_by = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.StringValue updated_by = 10;
+  double progress = 11;
+  bool complete = 12;
+}
+
+// Activity message
+message ActivityResponse {
+  string id = 1;
+  string report_id = 2;
+  string description = 3;
+  string category = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+  double progress = 7;
+  ActivityStatus status = 8;
+  google.protobuf.StringValue notes = 9;
+  repeated string personnel = 10;
+  google.protobuf.Timestamp created_at = 11;
+  string created_by = 12;
+  google.protobuf.Timestamp updated_at = 13;
+  google.protobuf.StringValue updated_by = 14;
+  int64 duration_minutes = 15;
+}
+
+// Request/Response messages for operations
+
+// CreateReport
+message CreateReportRequest {
+  string project_id = 1;
+  Date report_date = 2;
+  google.protobuf.StringValue notes = 3;
+  string username = 4;
+}
+
+// GetReport
+message GetReportRequest {
+  string report_id = 1;
+}
+
+// UpdateReport
+message UpdateReportRequest {
+  string report_id = 1;
+  google.protobuf.StringValue notes = 2;
+  string username = 3;
+}
+
+// SubmitReport
+message SubmitReportRequest {
+  string report_id = 1;
+  string username = 2;
+}
+
+// ApproveReport
+message ApproveReportRequest {
+  string report_id = 1;
+  string username = 2;
+}
+
+// RejectReport
+message RejectReportRequest {
+  string report_id = 1;
+  string reason = 2;
+  string username = 3;
+}
+
+// DeleteReport
+message DeleteReportRequest {
+  string report_id = 1;
+}
+
+// GetReportsByProject
+message GetReportsByProjectRequest {
+  string project_id = 1;
+  google.protobuf.StringValue start_date = 2; // Optional start date in format YYYY-MM-DD
+  google.protobuf.StringValue end_date = 3;   // Optional end date in format YYYY-MM-DD
+}
+
+// GetReportsByStatus
+message GetReportsByStatusRequest {
+  ReportStatus status = 1;
+}
+
+// AddActivity
+message AddActivityRequest {
+  string report_id = 1;
+  string description = 2;
+  string category = 3;
+  google.protobuf.Timestamp start_time = 4;
+  google.protobuf.Timestamp end_time = 5;
+  double progress = 6;
+  ActivityStatus status = 7;
+  google.protobuf.StringValue notes = 8;
+  repeated string personnel = 9;
+  string username = 10;
+}
+
+// GetActivity
+message GetActivityRequest {
+  string activity_id = 1;
+}
+
+// GetActivitiesByReport
+message GetActivitiesByReportRequest {
+  string report_id = 1;
+}
+
+// UpdateActivity
+message UpdateActivityRequest {
+  string activity_id = 1;
+  string description = 2;
+  string category = 3;
+  google.protobuf.Timestamp start_time = 4;
+  google.protobuf.Timestamp end_time = 5;
+  double progress = 6;
+  ActivityStatus status = 7;
+  google.protobuf.StringValue notes = 8;
+  repeated string personnel = 9;
+  string username = 10;
+}
+
+// UpdateActivityProgress
+message UpdateActivityProgressRequest {
+  string activity_id = 1;
+  double progress = 2;
+  string username = 3;
+}
+
+// DeleteActivity
+message DeleteActivityRequest {
+  string activity_id = 1;
+}
+
+// GetReportProgress
+message GetReportProgressRequest {
+  string report_id = 1;
+}
+
+// IsReportComplete
+message IsReportCompleteRequest {
+  string report_id = 1;
+}
+
+// GetTotalDuration
+message GetTotalDurationRequest {
+  string report_id = 1;
+}
+
+// Response for multiple reports
+message ReportListResponse {
+  repeated DailyReportResponse reports = 1;
+}
+
+// Response for multiple activities
+message ActivityListResponse {
+  repeated ActivityResponse activities = 1;
+}
+
+// Simple boolean response
+message BooleanResponse {
+  bool value = 1;
+}
+
+// Simple double response
+message DoubleResponse {
+  double value = 1;
+}
+
+// Simple long response
+message LongResponse {
+  int64 value = 1;
+}
