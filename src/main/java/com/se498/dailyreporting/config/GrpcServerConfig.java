@@ -3,6 +3,7 @@ package com.se498.dailyreporting.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import lombok.Data;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Configuration properties for the gRPC server
