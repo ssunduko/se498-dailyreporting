@@ -54,12 +54,6 @@ public class DailyReportSteps {
         log.info("BeforeScenario: Set up completed");
     }
 
-    @Given("I am an authenticated user with username \"$username\"")
-    public void givenAuthenticatedUserDoubleQuotes(String username) {
-        log.info("Executing parameterized step with double quotes: Given I am an authenticated user with username \"{}\"", username);
-        givenAuthenticatedUser(username);
-    }
-
     // Single-quote versions
     @Given("I am an authenticated user with username 'manager'")
     public void givenAuthenticatedUserWithUsernameManagerSingleQuotes() {
@@ -84,12 +78,6 @@ public class DailyReportSteps {
 
         currentUsername = username;
         log.info("Set currentUsername to: {}", currentUsername);
-    }
-
-    @When("I create a new daily report for project \"$projectId\" for date \"$reportDate\"")
-    public void whenCreateNewReportDoubleQuotes(String projectId, LocalDate reportDate) {
-        log.info("Executing parameterized step with double quotes: When I create a new daily report for project \"{}\" for date \"{}\"", projectId, reportDate);
-        whenCreateNewReport(projectId, reportDate);
     }
 
     // Single-quote versions
@@ -141,13 +129,6 @@ public class DailyReportSteps {
 
         log.info("Verified report was created successfully");
     }
-
-    @Then("the report status should be \"$status\"")
-    public void thenReportStatusShouldBeDoubleQuotes(String status) {
-        log.info("Executing parameterized step with double quotes: Then the report status should be \"{}\"", status);
-        thenReportStatusShouldBe(status);
-    }
-
     // Single-quote versions
     @Then("the report status should be 'DRAFT'")
     public void thenReportStatusShouldBeDraft() {
