@@ -2,6 +2,7 @@ package com.se498.dailyreporting.bdd.steps;
 
 import com.se498.dailyreporting.domain.bo.*;
 import com.se498.dailyreporting.service.WeatherReportingService;
+import lombok.extern.slf4j.Slf4j;
 import org.jbehave.core.annotations.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +20,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+
 @Component
+@Slf4j
 public class WeatherSteps {
 
     @Autowired
@@ -48,12 +49,13 @@ public class WeatherSteps {
         // If using mocks, reset them here
         Mockito.reset(weatherService);
 
-        System.out.println("WeatherSteps: BeforeScenario completed");
+        log.info("WeatherSteps: BeforeScenario completed");
     }
 
     @Given("I am an authenticated user")
     public void givenAuthenticatedUser() {
-        System.out.println("Executing step: Given I am an authenticated user");
+
+        log.info("Executing step: Given I am an authenticated user");
 
         // Setup security context with a test user
         UserDetails userDetails = User.builder()
@@ -66,20 +68,13 @@ public class WeatherSteps {
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
         );
 
-        System.out.println("User authenticated as: testUser");
-    }
-
-    // Double quotes version
-    @When("I request current weather for zip code \"$zipCode\" in country \"$country\"")
-    public void whenRequestWeatherByZipDoubleQuotes(String zipCode, String country) {
-        System.out.println("Executing step with double quotes: When I request current weather for zip code \"" + zipCode + "\" in country \"" + country + "\"");
-        whenRequestWeatherByZip(zipCode, country);
+        log.info("User authenticated as: testUser");
     }
 
     // Single quotes version
     @When("I request current weather for zip code '$zipCode' in country '$country'")
     public void whenRequestWeatherByZip(String zipCode, String country) {
-        System.out.println("Executing step with single quotes: When I request current weather for zip code '" + zipCode + "' in country '" + country + "'");
+        log.info("Executing step with single quotes: When I request current weather for zip code '{}' in country '{}'", zipCode, country);
 
         try {
             // Create location
@@ -94,25 +89,17 @@ public class WeatherSteps {
             // Call service
             currentWeatherRecord = weatherService.getCurrentWeather(currentLocation);
 
-            System.out.println("Retrieved weather for location: " + currentLocation.getCity() + ", " + currentLocation.getCountry());
+            log.info("Retrieved weather for location: {}, {}", currentLocation.getCity(), currentLocation.getCountry());
         } catch (Exception e) {
-            System.err.println("Exception in whenRequestWeatherByZip: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenRequestWeatherByZip: {}", e.getMessage());
             lastException = e;
         }
-    }
-
-    // Double quotes version
-    @When("I request current weather for city \"$city\" in country \"$country\"")
-    public void whenRequestWeatherByCityDoubleQuotes(String city, String country) {
-        System.out.println("Executing step with double quotes: When I request current weather for city \"" + city + "\" in country \"" + country + "\"");
-        whenRequestWeatherByCity(city, country);
     }
 
     // Single quotes version
     @When("I request current weather for city '$city' in country '$country'")
     public void whenRequestWeatherByCity(String city, String country) {
-        System.out.println("Executing step with single quotes: When I request current weather for city '" + city + "' in country '" + country + "'");
+        log.info("Executing step with single quotes: When I request current weather for city '{}' in country '{}'", city, country);
 
         try {
             // Create location
@@ -127,17 +114,16 @@ public class WeatherSteps {
             // Call service
             currentWeatherRecord = weatherService.getCurrentWeather(currentLocation);
 
-            System.out.println("Retrieved weather for city: " + city + ", " + country);
+            log.info("Retrieved weather for city: {}, {}", city, country);
         } catch (Exception e) {
-            System.err.println("Exception in whenRequestWeatherByCity: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenRequestWeatherByCity: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("I should receive valid weather information")
     public void thenReceiveValidWeatherInfo() {
-        System.out.println("Executing step: Then I should receive valid weather information");
+        log.info("Executing step: Then I should receive valid weather information");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(currentWeatherRecord, "Weather record is null");
@@ -159,12 +145,12 @@ public class WeatherSteps {
         assertNotNull(currentWeatherRecord.getCondition(), "Weather condition data is missing");
         assertNotNull(currentWeatherRecord.getCondition().getDescription(), "Condition description is missing");
 
-        System.out.println("Verified weather information is valid");
+        log.info("Verified weather information is valid");
     }
 
     @Then("the response should include temperature, humidity and wind speed")
     public void thenResponseIncludesBasicData() {
-        System.out.println("Executing step: Then the response should include temperature, humidity and wind speed");
+        log.info("Executing step: Then the response should include temperature, humidity and wind speed");
 
         assertNotNull(currentWeatherRecord, "Weather record is null");
 
@@ -183,20 +169,13 @@ public class WeatherSteps {
         double windSpeed = currentWeatherRecord.getWindSpeed().getMph();
         assertTrue(windSpeed >= 0, "Wind speed cannot be negative");
 
-        System.out.println("Verified response includes temperature, humidity, and wind speed");
-    }
-
-    // Double quotes version
-    @Then("the location information should match \"$expectedLocation\"")
-    public void thenLocationInfoMatchesDoubleQuotes(String expectedLocation) {
-        System.out.println("Executing step with double quotes: Then the location information should match \"" + expectedLocation + "\"");
-        thenLocationInfoMatches(expectedLocation);
+        log.info("Verified response includes temperature, humidity, and wind speed");
     }
 
     // Single quotes version
     @Then("the location information should match '$expectedLocation'")
     public void thenLocationInfoMatches(String expectedLocation) {
-        System.out.println("Executing step with single quotes: Then the location information should match '" + expectedLocation + "'");
+        log.info("Executing step with single quotes: Then the location information should match '{}'", expectedLocation);
 
         assertNotNull(currentWeatherRecord, "Weather record is null");
         assertNotNull(currentWeatherRecord.getLocation(), "Location is null");
@@ -216,20 +195,13 @@ public class WeatherSteps {
                     "Expected country " + expectedCountry + " but got " + currentWeatherRecord.getLocation().getCountry());
         }
 
-        System.out.println("Verified location matches: " + expectedLocation);
-    }
-
-    // Double quotes version
-    @When("I request weather alerts for zip code \"$zipCode\"")
-    public void whenRequestWeatherAlertsDoubleQuotes(String zipCode) {
-        System.out.println("Executing step with double quotes: When I request weather alerts for zip code \"" + zipCode + "\"");
-        whenRequestWeatherAlerts(zipCode);
+        log.info("Verified location matches: {}", expectedLocation);
     }
 
     // Single quotes version
     @When("I request weather alerts for zip code '$zipCode'")
     public void whenRequestWeatherAlerts(String zipCode) {
-        System.out.println("Executing step with single quotes: When I request weather alerts for zip code '" + zipCode + "'");
+        log.info("Executing step with single quotes: When I request weather alerts for zip code '{}'", zipCode);
 
         try {
             // Create location
@@ -253,38 +225,37 @@ public class WeatherSteps {
             weatherAlerts = weatherService.analyzeForAlerts(currentWeatherRecord);
 
             // Debug
-            System.out.println("Created " + weatherAlerts.size() + " weather alerts for zip " + zipCode);
+            log.info("Created {} weather alerts for zip {}", weatherAlerts.size(), zipCode);
         } catch (Exception e) {
-            System.err.println("Exception in whenRequestWeatherAlerts: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenRequestWeatherAlerts: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("I should receive a list of active weather alerts if any")
     public void thenReceiveWeatherAlerts() {
-        System.out.println("Executing step: Then I should receive a list of active weather alerts if any");
+        log.info("Executing step: Then I should receive a list of active weather alerts if any");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(weatherAlerts, "Weather alerts list is null");
 
-        System.out.println("Received " + weatherAlerts.size() + " weather alerts");
+        log.info("Received {} weather alerts", weatherAlerts.size());
     }
 
     @Then("the response should include alert count and severity information")
     public void thenResponseIncludesAlertInfo() {
-        System.out.println("Executing step: Then the response should include alert count and severity information");
+        log.info("Executing step: Then the response should include alert count and severity information");
 
         assertNotNull(weatherAlerts, "Weather alerts list is null");
 
         // Debug
-        System.out.println("Weather alerts:");
+        log.info("Weather alerts:");
         for (String alert : weatherAlerts) {
-            System.out.println("  - " + alert);
+            log.info("  - {}", alert);
         }
 
         // Verify alert count
-        assertTrue(weatherAlerts.size() >= 0, "Alert count should be 0 or more");
+        assertTrue(true, "Alert count should be 0 or more");
 
         // If there are alerts, verify they contain severity information
         if (!weatherAlerts.isEmpty()) {
@@ -299,20 +270,13 @@ public class WeatherSteps {
             assertTrue(hasSeverityInfo, "Alerts should include severity information");
         }
 
-        System.out.println("Verified response includes alert count and severity information");
-    }
-
-    // Double quotes version
-    @Given("the weather service has cached data for zip code \"$zipCode\"")
-    public void givenCachedWeatherDataDoubleQuotes(String zipCode) {
-        System.out.println("Executing step with double quotes: Given the weather service has cached data for zip code \"" + zipCode + "\"");
-        givenCachedWeatherData(zipCode);
+        log.info("Verified response includes alert count and severity information");
     }
 
     // Single quotes version
     @Given("the weather service has cached data for zip code '$zipCode'")
     public void givenCachedWeatherData(String zipCode) {
-        System.out.println("Executing step with single quotes: Given the weather service has cached data for zip code '" + zipCode + "'");
+        log.info("Executing step with single quotes: Given the weather service has cached data for zip code '{}'", zipCode);
 
         // Create location
         currentLocation = Location.fromZipCode(zipCode, "US");
@@ -339,20 +303,13 @@ public class WeatherSteps {
         // Store the cached record
         currentWeatherRecord = weatherRecord;
 
-        System.out.println("Created cached weather data for zip code: " + zipCode);
-    }
-
-    // Double quotes version
-    @When("I request weather data for zip code \"$zipCode\" within the cache validity period")
-    public void whenRequestDataInCacheValidityPeriodDoubleQuotes(String zipCode) {
-        System.out.println("Executing step with double quotes: When I request weather data for zip code \"" + zipCode + "\" within the cache validity period");
-        whenRequestDataInCacheValidityPeriod(zipCode);
+        log.info("Created cached weather data for zip code: {}", zipCode);
     }
 
     // Single quotes version
     @When("I request weather data for zip code '$zipCode' within the cache validity period")
     public void whenRequestDataInCacheValidityPeriod(String zipCode) {
-        System.out.println("Executing step with single quotes: When I request weather data for zip code '" + zipCode + "' within the cache validity period");
+        log.info("Executing step with single quotes: When I request weather data for zip code '{}' within the cache validity period", zipCode);
 
         try {
             // Ensure location matches
@@ -364,17 +321,16 @@ public class WeatherSteps {
             // Call service
             currentWeatherRecord = weatherService.getCurrentWeather(currentLocation);
 
-            System.out.println("Requested weather data for zip code: " + zipCode + " within cache validity period");
+            log.info("Requested weather data for zip code: {} within cache validity period", zipCode);
         } catch (Exception e) {
-            System.err.println("Exception in whenRequestDataInCacheValidityPeriod: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenRequestDataInCacheValidityPeriod: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the response should use cached data")
     public void thenResponseUsesCachedData() {
-        System.out.println("Executing step: Then the response should use cached data");
+        log.info("Executing step: Then the response should use cached data");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(currentWeatherRecord, "Weather record is null");
@@ -384,24 +340,24 @@ public class WeatherSteps {
         assertTrue(currentWeatherRecord.getDataSource().contains("Cached"),
                 "Data source should indicate cached data but was: " + currentWeatherRecord.getDataSource());
 
-        System.out.println("Verified response uses cached data");
+        log.info("Verified response uses cached data");
     }
 
     @Then("the response should indicate it came from cache")
     public void thenResponseIndicatesCache() {
-        System.out.println("Executing step: Then the response should indicate it came from cache");
+        log.info("Executing step: Then the response should indicate it came from cache");
 
         assertNotNull(currentWeatherRecord, "Weather record is null");
         assertNotNull(currentWeatherRecord.getDataSource(), "Data source is null");
         assertTrue(currentWeatherRecord.getDataSource().contains("Cached"),
                 "Data source should indicate cached data but was: " + currentWeatherRecord.getDataSource());
 
-        System.out.println("Verified response indicates it came from cache");
+        log.info("Verified response indicates it came from cache");
     }
 
     @When("I request to convert $fahrenheit degrees Fahrenheit to Celsius")
     public void whenConvertFahrenheitToCelsius(double fahrenheit) {
-        System.out.println("Executing step: When I request to convert " + fahrenheit + " degrees Fahrenheit to Celsius");
+        log.info("Executing step: When I request to convert {} degrees Fahrenheit to Celsius", fahrenheit);
 
         try {
             // Mock service to return converted temperature
@@ -411,27 +367,26 @@ public class WeatherSteps {
             // Call service
             temperatureResult = weatherService.convertFahrenheitToCelsius(fahrenheit);
 
-            System.out.println("Converted " + fahrenheit + "°F to " + temperatureResult + "°C");
+            log.info("Converted {}°F to {}°C", fahrenheit, temperatureResult);
         } catch (Exception e) {
-            System.err.println("Exception in whenConvertFahrenheitToCelsius: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenConvertFahrenheitToCelsius: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the response should be $celsius degrees Celsius")
     public void thenResponseIsCelsius(double celsius) {
-        System.out.println("Executing step: Then the response should be " + celsius + " degrees Celsius");
+        log.info("Executing step: Then the response should be {} degrees Celsius", celsius);
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertEquals(celsius, temperatureResult, 0.01, "Temperature conversion is incorrect");
 
-        System.out.println("Verified response is " + celsius + "°C");
+        log.info("Verified response is {}°C", celsius);
     }
 
     @When("I request to convert $celsius degrees Celsius to Fahrenheit")
     public void whenConvertCelsiusToFahrenheit(double celsius) {
-        System.out.println("Executing step: When I request to convert " + celsius + " degrees Celsius to Fahrenheit");
+        log.info("Executing step: When I request to convert {} degrees Celsius to Fahrenheit", celsius);
 
         try {
             // Mock service to return converted temperature
@@ -441,22 +396,21 @@ public class WeatherSteps {
             // Call service
             temperatureResult = weatherService.convertCelsiusToFahrenheit(celsius);
 
-            System.out.println("Converted " + celsius + "°C to " + temperatureResult + "°F");
+            log.info("Converted {}°C to {}°F", celsius, temperatureResult);
         } catch (Exception e) {
-            System.err.println("Exception in whenConvertCelsiusToFahrenheit: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenConvertCelsiusToFahrenheit: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the response should be $fahrenheit degrees Fahrenheit")
     public void thenResponseIsFahrenheit(double fahrenheit) {
-        System.out.println("Executing step: Then the response should be " + fahrenheit + " degrees Fahrenheit");
+        log.info("Executing step: Then the response should be {} degrees Fahrenheit", fahrenheit);
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertEquals(fahrenheit, temperatureResult, 0.01, "Temperature conversion is incorrect");
 
-        System.out.println("Verified response is " + fahrenheit + "°F");
+        log.info("Verified response is {}°F", fahrenheit);
     }
 
     // Helper method to create mock weather records

@@ -4,6 +4,7 @@ import com.se498.dailyreporting.bdd.steps.DailyReportSteps;
 import com.se498.dailyreporting.bdd.steps.WeatherSteps;
 import com.se498.dailyreporting.service.DailyReportingService;
 import com.se498.dailyreporting.service.WeatherReportingService;
+import lombok.extern.slf4j.Slf4j;
 import org.jbehave.core.configuration.Configuration;
 import org.jbehave.core.configuration.MostUsefulConfiguration;
 import org.jbehave.core.embedder.Embedder;
@@ -23,6 +24,7 @@ import org.springframework.context.ApplicationContext;
 import java.util.Arrays;
 
 @SpringBootTest
+@Slf4j
 public class WeatherReportingTest {
 
     @Autowired
@@ -37,17 +39,17 @@ public class WeatherReportingTest {
 
     @Test
     public void testWeatherStories() {
-        System.out.println("Starting Weather Stories test");
+        log.info("Starting Weather Stories test");
 
         // Use autowired steps if available, otherwise create manually
         WeatherSteps stepsToUse = weatherSteps;
         if (stepsToUse == null) {
-            System.out.println("WeatherSteps not autowired, creating manually");
+            log.info("WeatherSteps not autowired, creating manually");
             WeatherReportingService service = Mockito.mock(WeatherReportingService.class);
             stepsToUse = new WeatherSteps();
             setField(stepsToUse, "weatherService", service);
         } else {
-            System.out.println("Using autowired WeatherSteps: " + stepsToUse);
+            log.info("Using autowired WeatherSteps: {}", stepsToUse);
         }
 
         // Configure JBehave
@@ -63,30 +65,30 @@ public class WeatherReportingTest {
         // Check story path
         String storyPath = "stories/weather.story";
         if (getClass().getClassLoader().getResource(storyPath) == null) {
-            System.err.println("ERROR: Story file not found at: " + storyPath);
+            log.error("Story file not found at: {}", storyPath);
         } else {
-            System.out.println("Found story file at: " + getClass().getClassLoader().getResource(storyPath));
+            log.info("Found story file at: {}", getClass().getClassLoader().getResource(storyPath));
         }
 
         // Run the stories
-        System.out.println("Running weather.story");
+        log.info("Running weather.story");
         embedder.runStoriesAsPaths(Arrays.asList(storyPath));
-        System.out.println("Completed weather.story test");
+        log.info("Completed weather.story test");
     }
 
     @Test
     public void testDailyReportStories() {
-        System.out.println("Starting Daily Report Stories test");
+        log.info("Starting Daily Report Stories test");
 
         // Use autowired steps if available, otherwise create manually
         DailyReportSteps stepsToUse = dailyReportSteps;
         if (stepsToUse == null) {
-            System.out.println("DailyReportSteps not autowired, creating manually");
+            log.info("DailyReportSteps not autowired, creating manually");
             DailyReportingService service = Mockito.mock(DailyReportingService.class);
             stepsToUse = new DailyReportSteps();
             setField(stepsToUse, "reportingService", service);
         } else {
-            System.out.println("Using autowired DailyReportSteps: " + stepsToUse);
+            log.info("Using autowired DailyReportSteps: {}", stepsToUse);
         }
 
         // Configure JBehave
@@ -102,15 +104,15 @@ public class WeatherReportingTest {
         // Check story path
         String storyPath = "stories/daily_report.story";
         if (getClass().getClassLoader().getResource(storyPath) == null) {
-            System.err.println("ERROR: Story file not found at: " + storyPath);
+            log.error("Story file not found at: {}", storyPath);
         } else {
-            System.out.println("Found story file at: " + getClass().getClassLoader().getResource(storyPath));
+            log.info("Found story file at: {}", getClass().getClassLoader().getResource(storyPath));
         }
 
         // Run the stories
-        System.out.println("Running daily_report.story");
+        log.info("Running daily_report.story");
         embedder.runStoriesAsPaths(Arrays.asList(storyPath));
-        System.out.println("Completed daily_report.story test");
+        log.info("Completed daily_report.story test");
     }
 
     private Configuration createConfiguration() {
@@ -125,16 +127,16 @@ public class WeatherReportingTest {
     private InjectableStepsFactory createStepsFactory(Object... steps) {
         // Print the steps being added
         for (Object step : steps) {
-            System.out.println("Adding step instance: " + (step != null ? step.getClass().getName() : "null"));
+            log.info("Adding step instance: {}", (step != null ? step.getClass().getName() : "null"));
 
             // List annotated methods if step is not null
             if (step != null) {
-                System.out.println("Methods in " + step.getClass().getSimpleName() + ":");
+                log.info("Methods in {}:", step.getClass().getSimpleName());
                 for (java.lang.reflect.Method method : step.getClass().getMethods()) {
                     if (method.isAnnotationPresent(org.jbehave.core.annotations.Given.class) ||
                             method.isAnnotationPresent(org.jbehave.core.annotations.When.class) ||
                             method.isAnnotationPresent(org.jbehave.core.annotations.Then.class)) {
-                        System.out.println("  " + method.getName() + ": " + Arrays.toString(method.getAnnotations()));
+                        log.info("  {}: {}", method.getName(), Arrays.toString(method.getAnnotations()));
                     }
                 }
             }
@@ -147,12 +149,12 @@ public class WeatherReportingTest {
     public void verifyClasspath() {
         try {
             Class<?> weatherStepsClass = Class.forName("com.se498.dailyreporting.bdd.steps.WeatherSteps");
-            System.out.println("WeatherSteps class found on classpath: " + weatherStepsClass);
+            log.info("WeatherSteps class found on classpath: {}", weatherStepsClass);
 
             Class<?> dailyReportStepsClass = Class.forName("com.se498.dailyreporting.bdd.steps.DailyReportSteps");
-            System.out.println("DailyReportSteps class found on classpath: " + dailyReportStepsClass);
+            log.info("DailyReportSteps class found on classpath: {}", dailyReportStepsClass);
         } catch (ClassNotFoundException e) {
-            System.err.println("Class not found on classpath: " + e.getMessage());
+            log.error("Class not found on classpath: {}", e.getMessage());
         }
     }
 
@@ -164,13 +166,12 @@ public class WeatherReportingTest {
                 field.setAccessible(true);
                 field.set(target, value);
                 // Verify field was set
-                System.out.println("Successfully set field " + fieldName + " to " + value);
+                log.info("Successfully set field {} to {}", fieldName, value);
             } else {
-                System.err.println("Could not find field " + fieldName + " in class " + target.getClass().getName());
+                log.error("Could not find field {} in class {}", fieldName, target.getClass().getName());
             }
         } catch (Exception e) {
-            System.err.println("Could not set field " + fieldName + ": " + e.getMessage());
-            e.printStackTrace();
+            log.error("Could not set field {}: {}", fieldName, e.getMessage());
         }
     }
 

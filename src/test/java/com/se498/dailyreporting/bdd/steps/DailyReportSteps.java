@@ -5,6 +5,7 @@ import com.se498.dailyreporting.domain.bo.DailyReport;
 import com.se498.dailyreporting.domain.vo.ActivityStatus;
 import com.se498.dailyreporting.domain.vo.ReportStatus;
 import com.se498.dailyreporting.service.DailyReportingService;
+import lombok.extern.slf4j.Slf4j;
 import org.jbehave.core.annotations.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @Component
+@Slf4j
 public class DailyReportSteps {
 
     @Autowired
@@ -49,32 +51,25 @@ public class DailyReportSteps {
         // If using mocks, reset them here
         Mockito.reset(reportingService);
 
-        System.out.println("BeforeScenario: Set up completed");
-    }
-
-    // Double-quote versions
-    @Given("I am an authenticated user with username \"manager\"")
-    public void givenAuthenticatedUserWithUsernameManagerDoubleQuotes() {
-        System.out.println("Executing step with double quotes: Given I am an authenticated user with username \"manager\"");
-        givenAuthenticatedUser("manager");
+        log.info("BeforeScenario: Set up completed");
     }
 
     @Given("I am an authenticated user with username \"$username\"")
     public void givenAuthenticatedUserDoubleQuotes(String username) {
-        System.out.println("Executing parameterized step with double quotes: Given I am an authenticated user with username \"" + username + "\"");
+        log.info("Executing parameterized step with double quotes: Given I am an authenticated user with username \"{}\"", username);
         givenAuthenticatedUser(username);
     }
 
     // Single-quote versions
     @Given("I am an authenticated user with username 'manager'")
     public void givenAuthenticatedUserWithUsernameManagerSingleQuotes() {
-        System.out.println("Executing step with single quotes: Given I am an authenticated user with username 'manager'");
+        log.info("Executing step with single quotes: Given I am an authenticated user with username 'manager'");
         givenAuthenticatedUser("manager");
     }
 
     @Given("I am an authenticated user with username '$username'")
     public void givenAuthenticatedUser(String username) {
-        System.out.println("Executing parameterized step with single quotes: Given I am an authenticated user with username '" + username + "'");
+        log.info("Executing parameterized step with single quotes: Given I am an authenticated user with username '{}'", username);
 
         // Setup security context with the given username
         UserDetails userDetails = User.builder()
@@ -88,32 +83,25 @@ public class DailyReportSteps {
         );
 
         currentUsername = username;
-        System.out.println("Set currentUsername to: " + currentUsername);
-    }
-
-    // Double-quote versions
-    @When("I create a new daily report for project \"proj123\" for date \"2023-06-01\"")
-    public void whenCreateNewReportForProj123DoubleQuotes() {
-        System.out.println("Executing step with double quotes: When I create a new daily report for project \"proj123\" for date \"2023-06-01\"");
-        whenCreateNewReport("proj123", LocalDate.parse("2023-06-01"));
+        log.info("Set currentUsername to: {}", currentUsername);
     }
 
     @When("I create a new daily report for project \"$projectId\" for date \"$reportDate\"")
     public void whenCreateNewReportDoubleQuotes(String projectId, LocalDate reportDate) {
-        System.out.println("Executing parameterized step with double quotes: When I create a new daily report for project \"" + projectId + "\" for date \"" + reportDate + "\"");
+        log.info("Executing parameterized step with double quotes: When I create a new daily report for project \"{}\" for date \"{}\"", projectId, reportDate);
         whenCreateNewReport(projectId, reportDate);
     }
 
     // Single-quote versions
     @When("I create a new daily report for project 'proj123' for date '2023-06-01'")
     public void whenCreateNewReportForProj123SingleQuotes() {
-        System.out.println("Executing step with single quotes: When I create a new daily report for project 'proj123' for date '2023-06-01'");
+        log.info("Executing step with single quotes: When I create a new daily report for project 'proj123' for date '2023-06-01'");
         whenCreateNewReport("proj123", LocalDate.parse("2023-06-01"));
     }
 
     @When("I create a new daily report for project '$projectId' for date '$reportDate'")
     public void whenCreateNewReport(String projectId, LocalDate reportDate) {
-        System.out.println("Executing parameterized step with single quotes: When I create a new daily report for project '" + projectId + "' for date '" + reportDate + "'");
+        log.info("Executing parameterized step with single quotes: When I create a new daily report for project '{}' for date '{}'", projectId, reportDate);
 
         try {
             // Setup mock to return a new report
@@ -133,17 +121,16 @@ public class DailyReportSteps {
             currentReport = reportingService.createReport(projectId, reportDate, currentUsername);
             currentReportId = currentReport.getId();
 
-            System.out.println("Report created with ID: " + currentReportId + " and status: " + currentReport.getStatus());
+            log.info("Report created with ID: {} and status: {}", currentReportId, currentReport.getStatus());
         } catch (Exception e) {
-            System.err.println("Exception in whenCreateNewReport: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenCreateNewReport: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the report should be created successfully")
     public void thenReportCreatedSuccessfully() {
-        System.out.println("Executing step: Then the report should be created successfully");
+        log.info("Executing step: Then the report should be created successfully");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(currentReport, "Report was not created");
@@ -152,61 +139,46 @@ public class DailyReportSteps {
         // Verify the service was called
         verify(reportingService).createReport(anyString(), any(LocalDate.class), anyString());
 
-        System.out.println("Verified report was created successfully");
-    }
-
-    // Double-quote versions
-    @Then("the report status should be \"DRAFT\"")
-    public void thenReportStatusShouldBeDraftDoubleQuotes() {
-        System.out.println("Executing specific step with double quotes: Then the report status should be \"DRAFT\"");
-        thenReportStatusShouldBeDraft();
+        log.info("Verified report was created successfully");
     }
 
     @Then("the report status should be \"$status\"")
     public void thenReportStatusShouldBeDoubleQuotes(String status) {
-        System.out.println("Executing parameterized step with double quotes: Then the report status should be \"" + status + "\"");
+        log.info("Executing parameterized step with double quotes: Then the report status should be \"{}\"", status);
         thenReportStatusShouldBe(status);
     }
 
     // Single-quote versions
     @Then("the report status should be 'DRAFT'")
     public void thenReportStatusShouldBeDraft() {
-        System.out.println("Executing specific step with single quotes: Then the report status should be 'DRAFT'");
+        log.info("Executing specific step with single quotes: Then the report status should be 'DRAFT'");
 
         assertNotNull(currentReport, "Report is null");
         assertEquals(ReportStatus.DRAFT, currentReport.getStatus(),
                 "Expected status DRAFT but was " + currentReport.getStatus());
 
-        System.out.println("Verified report status is DRAFT");
+        log.info("Verified report status is DRAFT");
     }
 
     @Then("the report status should be '$status'")
     public void thenReportStatusShouldBe(String status) {
-        System.out.println("Executing parameterized step with single quotes: Then the report status should be '" + status + "'");
+        log.info("Executing parameterized step with single quotes: Then the report status should be '{}'", status);
 
         assertNotNull(currentReport, "Report is null");
         assertEquals(ReportStatus.valueOf(status), currentReport.getStatus(),
                 "Expected status " + status + " but was " + currentReport.getStatus());
 
-        System.out.println("Verified report status is " + status);
-    }
-
-    // Double-quote version
-    @Then("the report status should be updated to \"$status\"")
-    public void thenReportStatusShouldBeUpdatedToDoubleQuotes(String status) {
-        System.out.println("Executing step with double quotes: Then the report status should be updated to \"" + status + "\"");
-        thenReportStatusShouldBeUpdatedTo(status);
+        log.info("Verified report status is {}", status);
     }
 
     // Single-quote version
     @Then("the report status should be updated to '$status'")
     public void thenReportStatusShouldBeUpdatedTo(String status) {
-        System.out.println("Executing step with single quotes: Then the report status should be updated to '" + status + "'");
+        log.info("Executing step with single quotes: Then the report status should be updated to '{}'", status);
 
         // Check for exceptions that might have happened in previous steps
         if (lastException != null) {
-            System.err.println("Exception occurred in previous step: " + lastException.getMessage());
-            lastException.printStackTrace();
+            log.error("Exception occurred in previous step: {}", lastException.getMessage());
             fail("Exception occurred in previous step: " + lastException.getMessage());
         }
 
@@ -214,24 +186,17 @@ public class DailyReportSteps {
         assertNotNull(currentReport, "Report is null - did the previous step fail to set it?");
 
         // Debug output
-        System.out.println("In then step: currentReport = " + currentReport.getId() + ", status = " + currentReport.getStatus());
+        log.info("In then step: currentReport = {}, status = {}", currentReport.getId(), currentReport.getStatus());
 
         // Check the status
         assertEquals(ReportStatus.valueOf(status), currentReport.getStatus(),
                 "Expected status to be " + status + " but was " + currentReport.getStatus());
     }
 
-    // Double-quote versions
-    @Given("I have a daily report with ID \"$reportId\" for project \"$projectId\"")
-    public void givenDailyReportExistsDoubleQuotes(String reportId, String projectId) {
-        System.out.println("Executing step with double quotes: I have a daily report with ID \"" + reportId + "\" for project \"" + projectId + "\"");
-        givenDailyReportExists(reportId, projectId);
-    }
-
     // Single-quote versions
     @Given("I have a daily report with ID '$reportId' for project '$projectId'")
     public void givenDailyReportExists(String reportId, String projectId) {
-        System.out.println("Executing step with single quotes: I have a daily report with ID '" + reportId + "' for project '" + projectId + "'");
+        log.info("Executing step with single quotes: I have a daily report with ID '{}' for project '{}'", reportId, projectId);
 
         // Setup a mock report
         DailyReport report = new DailyReport(
@@ -251,20 +216,13 @@ public class DailyReportSteps {
         currentReport = report;
         currentReportId = reportId;
 
-        System.out.println("Created report with ID: " + reportId + ", project: " + projectId);
-    }
-
-    // Double-quote versions
-    @Given("I have a daily report with ID \"$reportId\" with status \"$status\"")
-    public void givenDailyReportWithStatusDoubleQuotes(String reportId, String status) {
-        System.out.println("Executing step with double quotes: I have a daily report with ID \"" + reportId + "\" with status \"" + status + "\"");
-        givenDailyReportWithStatus(reportId, status);
+        log.info("Created report with ID: {}, project: {}", reportId, projectId);
     }
 
     // Single-quote versions
     @Given("I have a daily report with ID '$reportId' with status '$status'")
     public void givenDailyReportWithStatus(String reportId, String status) {
-        System.out.println("Executing step with single quotes: I have a daily report with ID '" + reportId + "' with status '" + status + "'");
+        log.info("Executing step with single quotes: I have a daily report with ID '{}' with status '{}'", reportId, status);
 
         // Setup a mock report with the given status
         DailyReport report = new DailyReport(
@@ -287,7 +245,7 @@ public class DailyReportSteps {
         }
 
         // Debug output
-        System.out.println("Created report with ID: " + reportId + ", status: " + status);
+        log.info("Created report with ID: {}, status: {}", reportId, status);
 
         // Store current report and ID
         currentReport = report;
@@ -299,17 +257,10 @@ public class DailyReportSteps {
                 "Failed to set correct status");
     }
 
-    // Double-quote versions
-    @When("I add an activity with description \"$description\" and category \"$category\" to the report")
-    public void whenAddActivityDoubleQuotes(String description, String category) {
-        System.out.println("Executing step with double quotes: I add an activity with description \"" + description + "\" and category \"" + category + "\" to the report");
-        whenAddActivity(description, category);
-    }
-
     // Single-quote versions
     @When("I add an activity with description '$description' and category '$category' to the report")
     public void whenAddActivity(String description, String category) {
-        System.out.println("Executing step with single quotes: I add an activity with description '" + description + "' and category '" + category + "' to the report");
+        log.info("Executing step with single quotes: I add an activity with description '{}' and category '{}' to the report", description, category);
 
         try {
             // Create an activity entry
@@ -341,17 +292,16 @@ public class DailyReportSteps {
                 currentReport.getActivities().add(activity);
             }
 
-            System.out.println("Added activity: " + description + ", " + category);
+            log.info("Added activity: {}, {}", description, category);
         } catch (Exception e) {
-            System.err.println("Exception in whenAddActivity: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenAddActivity: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the activity should be added successfully to the report")
     public void thenActivityAddedSuccessfully() {
-        System.out.println("Executing step: the activity should be added successfully to the report");
+        log.info("Executing step: the activity should be added successfully to the report");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(currentActivity, "Activity was not created");
@@ -359,30 +309,30 @@ public class DailyReportSteps {
         // Verify the service was called
         verify(reportingService).addActivityToReport(anyString(), any(ActivityEntry.class));
 
-        System.out.println("Verified activity was added successfully");
+        log.info("Verified activity was added successfully");
     }
 
     @Then("the report should have $count activity")
     public void thenReportHasActivityCount(int count) {
-        System.out.println("Executing step: the report should have " + count + " activity");
+        log.info("Executing step: the report should have {} activity", count);
 
         assertNotNull(currentReport, "Report is null");
         assertNotNull(currentReport.getActivities(), "Activities list is null");
         assertEquals(count, currentReport.getActivities().size(),
                 "Expected " + count + " activities but found " + currentReport.getActivities().size());
 
-        System.out.println("Verified report has " + count + " activities");
+        log.info("Verified report has {} activities", count);
     }
 
     @Given("the report has at least one activity")
     public void givenReportHasActivity() {
-        System.out.println("Executing step: the report has at least one activity");
+        log.info("Executing step: the report has at least one activity");
 
         assertNotNull(currentReport, "Report is null");
 
         // Add an activity if none exists
         if (currentReport.getActivities() == null || currentReport.getActivities().isEmpty()) {
-            System.out.println("Adding a test activity to the report");
+            log.info("Adding a test activity to the report");
 
             ActivityEntry activity = new ActivityEntry();
             activity.setId(UUID.randomUUID().toString());
@@ -403,15 +353,15 @@ public class DailyReportSteps {
             currentReport.getActivities().add(activity);
             currentActivity = activity;
 
-            System.out.println("Added test activity to the report");
+            log.info("Added test activity to the report");
         } else {
-            System.out.println("Report already has activities: " + currentReport.getActivities().size());
+            log.info("Report already has activities: {}", currentReport.getActivities().size());
         }
     }
 
     @When("I submit the report for approval")
     public void whenSubmitReport() {
-        System.out.println("Executing step: I submit the report for approval");
+        log.info("Executing step: I submit the report for approval");
 
         try {
             // Make sure currentReport exists
@@ -437,7 +387,7 @@ public class DailyReportSteps {
             }
 
             // Debug output
-            System.out.println("Before mocking: currentReport = " + currentReport.getId() + ", status = " + currentReport.getStatus());
+            log.info("Before mocking: currentReport = {}, status = {}", currentReport.getId(), currentReport.getStatus());
 
             // Setup mock with a more flexible argument matcher
             when(reportingService.submitReport(anyString(), anyString()))
@@ -451,24 +401,23 @@ public class DailyReportSteps {
             assertNotNull(result, "Service returned null report after submission");
 
             // Debug output
-            System.out.println("After service call: result = " + result.getId() + ", status = " + result.getStatus());
+            log.info("After service call: result = {}, status = {}", result.getId(), result.getStatus());
 
             // Update the current report for the Then steps
             currentReport = result;
 
             // Debug output
-            System.out.println("After assignment: currentReport = " + currentReport.getId() + ", status = " + currentReport.getStatus());
+            log.info("After assignment: currentReport = {}, status = {}", currentReport.getId(), currentReport.getStatus());
         } catch (Exception e) {
             // Log the exception
-            System.err.println("Exception in whenSubmitReport: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenSubmitReport: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @When("the supervisor approves the report")
     public void whenSupervisorApprovesReport() {
-        System.out.println("Executing step: the supervisor approves the report");
+        log.info("Executing step: the supervisor approves the report");
 
         try {
             // Mock the service to return an updated report status
@@ -490,25 +439,17 @@ public class DailyReportSteps {
             // Call the service
             currentReport = reportingService.approveReport(currentReportId, "supervisor");
 
-            System.out.println("Report approved, status: " + currentReport.getStatus());
+            log.info("Report approved, status: {}", currentReport.getStatus());
         } catch (Exception e) {
-            System.err.println("Exception in whenSupervisorApprovesReport: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenSupervisorApprovesReport: {}", e.getMessage());
             lastException = e;
         }
-    }
-
-    // Double-quote versions
-    @When("the supervisor rejects the report with reason \"$reason\"")
-    public void whenSupervisorRejectsReportDoubleQuotes(String reason) {
-        System.out.println("Executing step with double quotes: the supervisor rejects the report with reason \"" + reason + "\"");
-        whenSupervisorRejectsReport(reason);
     }
 
     // Single-quote versions
     @When("the supervisor rejects the report with reason '$reason'")
     public void whenSupervisorRejectsReport(String reason) {
-        System.out.println("Executing step with single quotes: the supervisor rejects the report with reason '" + reason + "'");
+        log.info("Executing step with single quotes: the supervisor rejects the report with reason '{}'", reason);
 
         try {
             // Mock the service to return an updated report status
@@ -531,37 +472,29 @@ public class DailyReportSteps {
             // Call the service
             currentReport = reportingService.rejectReport(currentReportId, reason, "supervisor");
 
-            System.out.println("Report rejected, status: " + currentReport.getStatus() + ", reason: " + reason);
+            log.info("Report rejected, status: {}, reason: {}", currentReport.getStatus(), reason);
         } catch (Exception e) {
-            System.err.println("Exception in whenSupervisorRejectsReport: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenSupervisorRejectsReport: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the report notes should contain the rejection reason")
     public void thenReportNotesContainRejectionReason() {
-        System.out.println("Executing step: the report notes should contain the rejection reason");
+        log.info("Executing step: the report notes should contain the rejection reason");
 
         assertNotNull(currentReport, "Report is null");
         assertNotNull(currentReport.getNotes(), "Notes are null");
         assertTrue(currentReport.getNotes().contains("REJECTION REASON:"),
                 "Notes do not contain rejection reason marker");
 
-        System.out.println("Verified report notes contain rejection reason: " + currentReport.getNotes());
-    }
-
-    // Double-quote versions
-    @Given("I have an activity with ID \"$activityId\" in report \"$reportId\"")
-    public void givenActivityInReportDoubleQuotes(String activityId, String reportId) {
-        System.out.println("Executing step with double quotes: I have an activity with ID \"" + activityId + "\" in report \"" + reportId + "\"");
-        givenActivityInReport(activityId, reportId);
+        log.info("Verified report notes contain rejection reason: {}", currentReport.getNotes());
     }
 
     // Single-quote versions
     @Given("I have an activity with ID '$activityId' in report '$reportId'")
     public void givenActivityInReport(String activityId, String reportId) {
-        System.out.println("Executing step with single quotes: I have an activity with ID '" + activityId + "' in report '" + reportId + "'");
+        log.info("Executing step with single quotes: I have an activity with ID '{}' in report '{}'", activityId, reportId);
 
         // Setup activity
         ActivityEntry activity = new ActivityEntry();
@@ -586,21 +519,21 @@ public class DailyReportSteps {
 
         // If report doesn't exist yet, create it
         if (currentReport == null) {
-            System.out.println("Creating a report for the activity");
+            log.info("Creating a report for the activity");
             givenDailyReportExists(reportId, "testProject");
         }
 
-        System.out.println("Created activity with ID: " + activityId + " in report: " + reportId);
+        log.info("Created activity with ID: {} in report: {}", activityId, reportId);
     }
 
     @When("I update the activity progress to $progress percent")
     public void whenUpdateActivityProgress(double progress) {
-        System.out.println("Executing step: I update the activity progress to " + progress + " percent");
+        log.info("Executing step: I update the activity progress to {} percent", progress);
 
         try {
             // Ensure currentActivity is not null
             if (currentActivity == null) {
-                System.out.println("Creating default activity since currentActivity is null");
+                log.info("Creating default activity since currentActivity is null");
 
                 currentActivity = new ActivityEntry();
                 currentActivity.setId("activity123");
@@ -640,17 +573,16 @@ public class DailyReportSteps {
             currentActivity = reportingService.updateActivityProgress(
                     currentActivity.getId(), progress, currentUsername != null ? currentUsername : "testUser");
 
-            System.out.println("Updated activity progress to " + progress + "%");
+            log.info("Updated activity progress to {}%", progress);
         } catch (Exception e) {
-            System.err.println("Exception in whenUpdateActivityProgress: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception in whenUpdateActivityProgress: {}", e.getMessage());
             lastException = e;
         }
     }
 
     @Then("the activity progress should be updated successfully")
     public void thenActivityProgressUpdatedSuccessfully() {
-        System.out.println("Executing step: the activity progress should be updated successfully");
+        log.info("Executing step: the activity progress should be updated successfully");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
         assertNotNull(currentActivity, "Activity is null");
@@ -659,12 +591,12 @@ public class DailyReportSteps {
         verify(reportingService).updateActivityProgress(
                 anyString(), anyDouble(), anyString());
 
-        System.out.println("Verified activity progress was updated successfully");
+        log.info("Verified activity progress was updated successfully");
     }
 
     @Then("the report progress should be recalculated")
     public void thenReportProgressRecalculated() {
-        System.out.println("Executing step: the report progress should be recalculated");
+        log.info("Executing step: the report progress should be recalculated");
 
         // Mock the service to be called to recalculate progress
         when(reportingService.calculateReportProgress(anyString())).thenReturn(75.0);
@@ -674,6 +606,6 @@ public class DailyReportSteps {
 
         verify(reportingService).calculateReportProgress(anyString());
 
-        System.out.println("Verified report progress was recalculated, new progress: " + progress + "%");
+        log.info("Verified report progress was recalculated, new progress: {}%", progress);
     }
 }
