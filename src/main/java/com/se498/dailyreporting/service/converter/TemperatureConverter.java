@@ -1,14 +1,17 @@
 package com.se498.dailyreporting.service.converter;
 
 
+import java.util.Map;
 import java.util.Scanner;
 
-public class TemperatureConverter {
+public class TemperatureConverter extends AbstractTemperatureConverter {
 
-    static Double convert(double numberToConvert) {
+    private static final TemperatureConverter instance = new TemperatureConverter();
+
+    public Double convert(double numberToConvert) {
         return numberToConvert * 9/5 + 32;
     }
-    static Double convert(double numberToConvert, String conversionScale){
+    public Double convert(double numberToConvert, String conversionScale){
         if (conversionScale.equalsIgnoreCase("Celsius to Fahrenheit")){
             return convert(numberToConvert);
         } else {
@@ -16,6 +19,17 @@ public class TemperatureConverter {
         }
         return null;
     }
+
+    @Override
+    protected ConversionStrategy getStrategyByName(String strategyName) {
+        return null;
+    }
+
+    @Override
+    public Map<String, ConversionStrategy> getAvailableStrategies() {
+        return null;
+    }
+
     private static double readNumber(){
         Scanner scanner = new Scanner(System.in);
         System.out.print("Please Enter Number To Convert: ");
@@ -30,6 +44,6 @@ public class TemperatureConverter {
     public static void main(String[] args) throws Exception {
         double numberToConvert = readNumber();
         String conversionScale = readConversionScale();
-        System.out.println("Converted Number: " + convert(numberToConvert, conversionScale));
+        System.out.println("Converted Number: " + instance.convert(numberToConvert, conversionScale));
     }
 }
