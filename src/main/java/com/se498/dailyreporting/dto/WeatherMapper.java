@@ -86,7 +86,7 @@ public class WeatherMapper {
      * @param fahrenheit Temperature in Fahrenheit
      * @return Temperature in Celsius
      */
-    private double convertFToC(double fahrenheit) {
+    public double convertFToC(double fahrenheit) {
         return (fahrenheit - 32) * 5 / 9;
     }
 }
