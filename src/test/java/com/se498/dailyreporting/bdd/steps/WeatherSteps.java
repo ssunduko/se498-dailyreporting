@@ -333,10 +333,10 @@ public class WeatherSteps {
         log.info("Executing step: Then the response should use cached data");
 
         assertNull(lastException, "Exception occurred: " + (lastException != null ? lastException.getMessage() : ""));
-        assertNotNull(currentWeatherRecord, "Weather record is null");
+        assertNotNull(currentWeatherRecord, "Weather record is not null");
 
         // Verify data source indicates cache
-        assertNotNull(currentWeatherRecord.getDataSource(), "Data source is null");
+        assertNotNull(currentWeatherRecord.getDataSource(), "Data source is not null");
         assertTrue(currentWeatherRecord.getDataSource().contains("Cached"),
                 "Data source should indicate cached data but was: " + currentWeatherRecord.getDataSource());
 
@@ -347,8 +347,8 @@ public class WeatherSteps {
     public void thenResponseIndicatesCache() {
         log.info("Executing step: Then the response should indicate it came from cache");
 
-        assertNotNull(currentWeatherRecord, "Weather record is null");
-        assertNotNull(currentWeatherRecord.getDataSource(), "Data source is null");
+        assertNotNull(currentWeatherRecord, "Weather record is not null");
+        assertNotNull(currentWeatherRecord.getDataSource(), "Data source is not null");
         assertTrue(currentWeatherRecord.getDataSource().contains("Cached"),
                 "Data source should indicate cached data but was: " + currentWeatherRecord.getDataSource());
 
