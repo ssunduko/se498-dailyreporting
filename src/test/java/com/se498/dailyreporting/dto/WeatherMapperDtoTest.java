@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.time.LocalDateTime;
-
 import static org.instancio.Select.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -226,8 +224,8 @@ class WeatherMapperDtoTest {
                 .set(field(WeatherRecord::getPressureInHg), 29.92)
                 .set(field(WeatherRecord::getVisibilityMiles), 10.0)
                 .set(field(WeatherRecord::getUvIndex), 5)
-                .set(field(WeatherRecord::getRecordedAt), LocalDateTime.now().minusMinutes(15))
-                .set(field(WeatherRecord::getFetchedAt), LocalDateTime.now().minusMinutes(5))
+                .generate(field(WeatherRecord::getRecordedAt), gen -> gen.temporal().localDateTime().past())
+                .generate(field(WeatherRecord::getFetchedAt), gen -> gen.temporal().localDateTime().future())
                 .set(field(WeatherRecord::getDataSource), "Test Provider")
                 .create();
     }
