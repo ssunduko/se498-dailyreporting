@@ -91,8 +91,7 @@ public class TemperatureConversionService {
                 // Special case handling for CelsiusToFahrenheitConverter
                 // This doesn't violate LSP because we're explicitly checking the type
                 // for optional enhanced behavior
-                if (selectedConverter instanceof CelsiusToFahrenheitConverter) {
-                    CelsiusToFahrenheitConverter c2f = (CelsiusToFahrenheitConverter) selectedConverter;
+                if (selectedConverter instanceof CelsiusToFahrenheitConverter c2f) {
                     if (c2f.isFreezing(inputValue)) {
                         System.out.println("Warning: Temperature is at or below freezing point!");
                         System.out.println(c2f.getFreezingDescription(inputValue));
