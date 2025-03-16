@@ -5,6 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Selenium tests for Daily Report functionality
  */
+@ActiveProfiles("test")
 public class DailyReportTest extends BaseSeleniumTest {
 
     private String createTestReport() {
