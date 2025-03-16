@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Weather Alerts Results</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Weather Alerts Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Weather Alerts for <span th:text="${location}">Location</span>
+                    </h2>
+                    <span class="badge rounded-pill"
+                          th:classappend="${alertCount > 0 ? 'bg-danger' : 'bg-success'}"
+                          th:text="${alertCount > 0 ? alertCount + ' Alert(s)' : 'No Alerts'}">
+                            0 Alerts
+                        </span>
+                </div>
+                <div class="card-body">
+                    <!-- Current Conditions Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <!-- Weather Condition Icon -->
+                                    <i th:class="${'fas fa-5x mb-3 ' + (condition == 'Clear' ? 'fa-sun text-warning' :
+                                                            condition == 'Clouds' ? 'fa-cloud text-secondary' :
+                                                            condition == 'Rain' ? 'fa-cloud-rain text-primary' :
+                                                            condition == 'Snow' ? 'fa-snowflake text-info' :
+                                                            condition == 'Thunderstorm' ? 'fa-bolt text-warning' :
+                                                            condition == 'Drizzle' ? 'fa-cloud-rain text-info' :
+                                                            condition == 'Mist' || condition == 'Fog' ? 'fa-smog text-secondary' :
+                                                            'fa-cloud-sun text-primary')}"></i>
+
+                                    <h3 th:text="${condition}">Weather Condition</h3>
+                                    <h2 class="display-4" th:text="${#numbers.formatDecimal(temperature, 0, 1) + '°F'}">75.0°F</h2>
+                                </div>
+                                <div class="card-footer text-center text-muted">
+                                    Data recorded: <span th:text="${#temporals.format(recordedAt, 'yyyy-MM-dd HH:mm')}">2025-03-15 14:30</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header"
+                                     th:classappend="${hasSevereConditions ? 'bg-danger text-white' : 'bg-success text-white'}">
+                                    <h4 class="mb-0">
+                                        <i th:class="${'fas me-2 ' + (hasSevereConditions ? 'fa-exclamation-circle' : 'fa-check-circle')}"></i>
+                                        <span th:text="${hasSevereConditions ? 'Site Operations Impact' : 'Safe Working Conditions'}">
+                                                Site Operations Impact
+                                            </span>
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div th:if="${alertCount == 0 && !hasSevereConditions}" class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <strong>No weather alerts detected.</strong> Current conditions appear favorable for construction activities.
+                                    </div>
+
+                                    <div th:if="${alertCount > 0 || hasSevereConditions}" class="alert alert-danger">
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                        <strong>Adverse weather conditions detected!</strong> Please review the alerts and take appropriate precautions.
+                                    </div>
+
+                                    <div th:if="${alertCount > 0}" class="mt-3">
+                                        <h5><i class="fas fa-bell me-2"></i> Active Alerts:</h5>
+                                        <ul class="list-group">
+                                            <li class="list-group-item list-group-item-danger" th:each="alert : ${alerts}" th:text="${alert}">
+                                                Alert Description
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Site Safety Recommendations -->
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0"><i class="fas fa-hard-hat me-2"></i> Site Safety Recommendations</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>High-Risk Activities</h5>
+                                    <ul class="list-group mb-3">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            th:classappend="${(condition == 'Thunderstorm' || condition == 'Rain' || condition == 'Drizzle' || condition == 'Snow') ? 'list-group-item-danger' : 'list-group-item-success'}">
+                                            <span>Roofing Operations</span>
+                                            <span th:if="${(condition == 'Thunderstorm' || condition == 'Rain' || condition == 'Drizzle' || condition == 'Snow')}" class="badge bg-danger">Unsafe</span>
+                                            <span th:unless="${(condition == 'Thunderstorm' || condition == 'Rain' || condition == 'Drizzle' || condition == 'Snow')}" class="badge bg-success">Safe</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            th:classappend="${temperature < 40 || (condition == 'Thunderstorm' || condition == 'Snow') ? 'list-group-item-danger' : 'list-group-item-success'}">
+                                            <span>Concrete Pouring</span>
+                                            <span th:if="${temperature < 40 || (condition == 'Thunderstorm' || condition == 'Snow')}" class="badge bg-danger">Unsafe</span>
+                                            <span th:unless="${temperature < 40 || (condition == 'Thunderstorm' || condition == 'Snow')}" class="badge bg-success">Safe</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            th:classappend="${hasSevereConditions || condition == 'Thunderstorm' ? 'list-group-item-danger' : 'list-group-item-success'}">
+                                            <span>Crane Operations</span>
+                                            <span th:if="${hasSevereConditions || condition == 'Thunderstorm'}" class="badge bg-danger">Unsafe</span>
+                                            <span th:unless="${hasSevereConditions || condition == 'Thunderstorm'}" class="badge bg-success">Safe</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                                            th:classappend="${(condition == 'Rain' || condition == 'Thunderstorm') ? 'list-group-item-danger' : 'list-group-item-success'}">
+                                            <span>Excavation</span>
+                                            <span th:if="${(condition == 'Rain' || condition == 'Thunderstorm')}" class="badge bg-danger">Unsafe</span>
+                                            <span th:unless="${(condition == 'Rain' || condition == 'Thunderstorm')}" class="badge bg-success">Safe</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h5>Recommended Actions</h5>
+                                    <div class="alert alert-secondary">
+                                        <ul class="mb-0">
+                                            <li th:if="${condition == 'Thunderstorm'}">
+                                                <strong>Lightning Hazard!</strong> Evacuate workers from elevated and exposed areas. Seek shelter in enclosed buildings.
+                                            </li>
+                                            <li th:if="${temperature > 90}">
+                                                <strong>Heat Risk!</strong> Implement mandatory hydration breaks. Monitor workers for signs of heat stress.
+                                            </li>
+                                            <li th:if="${temperature < 32}">
+                                                <strong>Freezing Conditions!</strong> Protect materials from freezing. Monitor workers for cold exposure.
+                                            </li>
+                                            <li th:if="${condition == 'Rain' || condition == 'Drizzle'}">
+                                                <strong>Wet Conditions!</strong> Inspect scaffolding for slippery surfaces. Protect electrical equipment.
+                                            </li>
+                                            <li th:if="${condition == 'Snow'}">
+                                                <strong>Snow Hazard!</strong> Clear walkways and work surfaces. Use appropriate traction devices.
+                                            </li>
+                                            <li th:if="${condition == 'Mist' || condition == 'Fog'}">
+                                                <strong>Visibility Issues!</strong> Use additional signaling for crane operations. Enhance site lighting.
+                                            </li>
+                                            <li th:if="${alertCount == 0 && !hasSevereConditions && !(temperature > 90) && !(temperature < 32) && condition != 'Rain' && condition != 'Drizzle' && condition != 'Snow' && condition != 'Thunderstorm' && condition != 'Mist' && condition != 'Fog'}">
+                                                <strong>Favorable Conditions!</strong> All construction activities can proceed with normal safety protocols.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a th:href="@{/ui/weather/alerts}" class="btn btn-secondary">
+                            <i class="fas fa-search me-1"></i> New Search
+                        </a>
+                        <a th:href="@{/ui/weather}" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i> Weather Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

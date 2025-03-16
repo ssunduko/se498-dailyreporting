@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Current Weather Results</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Weather Results Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-cloud-sun me-2"></i>
+                        Current Weather for <span th:text="${weather.locationString ?: weather.city + ', ' + weather.stateOrProvince}">Location</span>
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Main Weather Info -->
+                        <div class="col-md-6">
+                            <div class="text-center mb-4">
+                                <!-- Weather Condition Icon -->
+                                <i th:class="${'fas fa-4x ' + (weather.isClear ? 'fa-sun text-warning' :
+                                                                  weather.isRainy ? 'fa-cloud-rain text-primary' :
+                                                                  weather.isSnowy ? 'fa-snowflake text-info' :
+                                                                  'fa-cloud text-secondary')}"></i>
+
+                                <h3 class="mt-2" th:text="${weather.condition}">Weather Condition</h3>
+                            </div>
+
+                            <div class="text-center">
+                                <h2 class="display-4" th:text="${#numbers.formatDecimal(weather.temperatureF, 0, 1) + '°F'}">75.0°F</h2>
+                                <p class="text-muted" th:text="${'Feels like: ' + #numbers.formatDecimal(weather.feelsLikeF, 0, 1) + '°F'}">Feels like: 78.0°F</p>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h4>Weather Details</h4>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-temperature-low me-2"></i> Temperature</span>
+                                        <span>
+                                                <span th:text="${#numbers.formatDecimal(weather.temperatureF, 0, 1) + '°F'}">68.0°F</span>
+                                                (<span th:text="${#numbers.formatDecimal(weather.temperatureC, 0, 1) + '°C'}">20.0°C</span>)
+                                            </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-tint me-2"></i> Humidity</span>
+                                        <span th:text="${weather.humidity + '%'}">45%</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-wind me-2"></i> Wind Speed</span>
+                                        <span th:text="${#numbers.formatDecimal(weather.windSpeedMph, 0, 1) + ' mph'}">12 mph</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-eye me-2"></i> Visibility</span>
+                                        <span th:text="${#numbers.formatDecimal(weather.visibilityMiles, 0, 1) + ' miles'}">10.0 miles</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-compress-alt me-2"></i> Pressure</span>
+                                        <span th:text="${#numbers.formatDecimal(weather.pressureInHg, 0, 2) + ' inHg'}">29.92 inHg</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="fas fa-sun me-2"></i> UV Index</span>
+                                        <span th:text="${weather.uvIndex}">5</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weather Alerts Section -->
+                    <div class="mt-4" th:if="${weather.hasAlerts}">
+                        <h4 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i> Weather Alerts</h4>
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                <li th:each="alert : ${weather.alerts}" th:text="${alert}">Alert Description</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 small text-muted">
+                        <p>
+                            <i class="fas fa-info-circle me-1"></i> Data recorded:
+                            <span th:text="${#temporals.format(weather.recordedAt, 'yyyy-MM-dd HH:mm')}">2025-03-15 14:30</span>,
+                            fetched: <span th:text="${#temporals.format(weather.fetchedAt, 'yyyy-MM-dd HH:mm')}">2025-03-15 14:35</span>
+                            <span th:if="${weather.fromCache}">(from cache)</span>
+                            <span th:if="${weather.dataAgeMinutes != null}">
+                                    - <span th:text="${weather.dataAgeMinutes}">5</span> minutes old
+                                </span>
+                        </p>
+                        <p th:if="${weather.dataSource != null}">
+                            <i class="fas fa-database me-1"></i> Source: <span th:text="${weather.dataSource}">OpenWeatherMap</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a th:href="@{/ui/weather/current}" class="btn btn-secondary">
+                            <i class="fas fa-search me-1"></i> New Search
+                        </a>
+                        <a th:href="@{/ui/weather}" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i> Weather Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Construction Impact Card -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-hard-hat me-2"></i> Construction Impact Assessment</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Current Conditions Impact</h5>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item" th:classappend="${weather.temperatureF < 32 ? 'list-group-item-danger' : (weather.temperatureF < 45 ? 'list-group-item-warning' : 'list-group-item-success')}">
+                                    <i class="fas fa-thermometer-half me-2"></i> Temperature Impact:
+                                    <span th:text="${weather.temperatureF < 32 ? 'High (Freezing)' : (weather.temperatureF < 45 ? 'Moderate (Cold)' : (weather.temperatureF > 90 ? 'High (Very Hot)' : (weather.temperatureF > 85 ? 'Moderate (Hot)' : 'Low (Ideal)')))}" class="fw-bold">Low</span>
+                                </li>
+                                <li class="list-group-item" th:classappend="${weather.windSpeedMph > 25 ? 'list-group-item-danger' : (weather.windSpeedMph > 15 ? 'list-group-item-warning' : 'list-group-item-success')}">
+                                    <i class="fas fa-wind me-2"></i> Wind Impact:
+                                    <span th:text="${weather.windSpeedMph > 25 ? 'High (Unsafe for Crane Operations)' : (weather.windSpeedMph > 15 ? 'Moderate (Use Caution)' : 'Low')}" class="fw-bold">Low</span>
+                                </li>
+                                <li class="list-group-item" th:classappend="${weather.isRainy || weather.isSnowy ? 'list-group-item-danger' : (!weather.isClear ? 'list-group-item-warning' : 'list-group-item-success')}">
+                                    <i class="fas fa-cloud me-2"></i> Precipitation Impact:
+                                    <span th:text="${weather.isRainy || weather.isSnowy ? 'High (Active Precipitation)' : (!weather.isClear ? 'Moderate (Possible Precipitation)' : 'Low (Clear)')}" class="fw-bold">Low</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5>Recommended Actions</h5>
+                            <div class="alert alert-secondary">
+                                <p><i class="fas fa-clipboard-check me-2"></i> <strong>Site Manager Checklist:</strong></p>
+                                <ul class="mb-0">
+                                    <li th:if="${weather.temperatureF < 32}">Implement cold weather protocols for concrete and material handling</li>
+                                    <li th:if="${weather.temperatureF > 90}">Schedule hydration breaks and monitor for heat exhaustion</li>
+                                    <li th:if="${weather.windSpeedMph > 20}">Suspend crane operations and secure loose materials</li>
+                                    <li th:if="${weather.isRainy || weather.isSnowy}">Move sensitive activities indoors or under cover</li>
+                                    <li th:if="${weather.severeWeather}">Monitor weather alerts and be prepared to evacuate if necessary</li>
+                                    <li th:if="${weather.favorableForOutdoor}">Ideal conditions for all construction activities</li>
+                                    <li th:if="${weather.visibilityMiles < 1}">Limited visibility may affect crane operations and site safety</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

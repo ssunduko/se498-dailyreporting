@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Weather Services</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Weather Services</h2>
+                    <p class="card-text">
+                        Access current and historical weather data for construction sites. Monitor conditions
+                        that might affect your construction activities.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Current Weather Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-cloud-sun fa-4x mb-3 text-primary"></i>
+                    <h3 class="card-title">Current Weather</h3>
+                    <p class="card-text">Check current weather conditions at your construction site.</p>
+                    <a th:href="@{/ui/weather/current}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Get Weather
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historical Weather Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-history fa-4x mb-3 text-primary"></i>
+                    <h3 class="card-title">Historical Data</h3>
+                    <p class="card-text">Retrieve past weather data for project documentation and analysis.</p>
+                    <a th:href="@{/ui/weather/history}" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i> View History
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Alerts Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-4x mb-3 text-warning"></i>
+                    <h3 class="card-title">Weather Alerts</h3>
+                    <p class="card-text">Monitor active weather alerts that might affect site operations.</p>
+                    <a th:href="@{/ui/weather/alerts}" class="btn btn-warning">
+                        <i class="fas fa-bell"></i> Check Alerts
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temperature Conversion Card -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-temperature-high fa-4x mb-3 text-success"></i>
+                    <h3 class="card-title">Temperature Tools</h3>
+                    <p class="card-text">Convert between temperature units for material specifications.</p>
+                    <a th:href="@{/ui/weather/convert}" class="btn btn-success">
+                        <i class="fas fa-exchange-alt"></i> Convert
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Weather Impact on Construction</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Site Management Considerations</h4>
+                            <ul>
+                                <li>Extreme temperatures can affect material performance</li>
+                                <li>High winds may prevent crane operations</li>
+                                <li>Heavy rain can compromise excavation stability</li>
+                                <li>Lightning presents serious safety hazards</li>
+                                <li>Snow and ice can delay work and create unsafe conditions</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Using Weather Data Effectively</h4>
+                            <ul>
+                                <li>Plan daily activities based on forecasts</li>
+                                <li>Document weather conditions for project records</li>
+                                <li>Schedule weather-sensitive tasks during favorable conditions</li>
+                                <li>Prepare contingency plans for severe weather events</li>
+                                <li>Consider historical weather patterns for long-term planning</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

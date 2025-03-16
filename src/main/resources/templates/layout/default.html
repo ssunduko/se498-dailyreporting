@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ?: 'Construction Daily Reporting'">Construction Daily Reporting</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            padding-top: 56px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+        }
+        .footer {
+            margin-top: auto;
+            background-color: #f8f9fa;
+            padding: 10px 0;
+        }
+        .nav-link.active {
+            font-weight: bold;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<!-- Top Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">Construction Management</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <!-- Daily Reporting -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="reportingDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Daily Reporting
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="reportingDropdown">
+                        <li><a class="dropdown-item" th:href="@{/ui/reports}">View Reports</a></li>
+                        <li><a class="dropdown-item" th:href="@{/ui/reports/new}">Create Report</a></li>
+                    </ul>
+                </li>
+
+                <!-- Weather -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="weatherDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Weather
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="weatherDropdown">
+                        <li><a class="dropdown-item" th:href="@{/ui/weather/current}">Current Weather</a></li>
+                        <li><a class="dropdown-item" th:href="@{/ui/weather/history}">Historical Weather</a></li>
+                        <li><a class="dropdown-item" th:href="@{/ui/weather/alerts}">Weather Alerts</a></li>
+                        <li><a class="dropdown-item" th:href="@{/ui/weather/convert}">Temperature Conversion</a></li>
+                    </ul>
+                </li>
+
+                <!-- API Documentation -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/swagger-ui/index.html">API Docs</a>
+                </li>
+            </ul>
+
+            <!-- User section on right -->
+            <ul class="navbar-nav" sec:authorize="isAuthenticated()">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle"></i> <span sec:authentication="name">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" th:href="@{/profile}">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+            <a sec:authorize="!isAuthenticated()" class="btn btn-outline-light ms-2" th:href="@{/login}">Login</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main class="container py-4">
+    <!-- Alert Messages -->
+    <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${success}">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${error}">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Page Title -->
+    <h1 class="mb-4" th:text="${pageTitle} ?: 'Construction Site Management'">Construction Site Management</h1>
+
+    <!-- Page Content -->
+    <div layout:fragment="content">
+        <!-- Content will be replaced by each page -->
+        Page content goes here
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer text-center py-3">
+    <div class="container">
+            <span class="text-muted">
+                &copy; 2025 Construction Daily Reporting System |
+                <a href="#" target="_blank">Terms</a> |
+                <a href="#" target="_blank">Privacy</a>
+            </span>
+    </div>
+</footer>
+
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Additional scripts -->
+<th:block layout:fragment="scripts">
+    <!-- Additional scripts can be added per page -->
+</th:block>
+</body>
+</html>

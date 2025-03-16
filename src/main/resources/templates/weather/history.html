@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Historical Weather</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-history me-2"></i> Historical Weather Data</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/ui/weather/history}" method="post" class="needs-validation" novalidate>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Enter a location and date range to retrieve historical weather data.
+                        </div>
+
+                        <div th:if="${warning}" class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i> <span th:text="${warning}">Warning message</span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City Name</label>
+                                <input type="text" class="form-control" id="city" name="city"
+                                       placeholder="Enter city name (e.g. Chicago)"
+                                       th:value="${city}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stateOrProvince" class="form-label">State/Province (optional)</label>
+                                <input type="text" class="form-control" id="stateOrProvince" name="stateOrProvince"
+                                       placeholder="Enter state/province (e.g. IL)"
+                                       th:value="${stateOrProvince}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="zip" class="form-label">Zip/Postal Code</label>
+                                <input type="text" class="form-control" id="zip" name="zip"
+                                       placeholder="Enter zip/postal code (e.g. 60601)"
+                                       th:value="${zip}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country"
+                                       placeholder="Country code (default: US)"
+                                       th:value="${country ?: 'US'}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate"
+                                       th:value="${startDate}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="startTime" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="startTime" name="startTime"
+                                       value="00:00" th:value="${startTime ?: '00:00'}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate"
+                                       th:value="${endDate}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="endTime" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="endTime" name="endTime"
+                                       value="23:59" th:value="${endTime ?: '23:59'}" required>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> Historical data is typically limited to the past 5-7 days for most locations.
+                            Using current weather is recommended for real-time data.
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i> Get Historical Data
+                            </button>
+                            <a th:href="@{/ui/weather/current}" class="btn btn-info ms-2">
+                                <i class="fas fa-cloud-sun me-2"></i> Try Current Weather
+                            </a>
+                            <a th:href="@{/ui/weather}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Form validation
+        (function() {
+            'use strict';
+
+            const forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    const city = document.getElementById('city').value;
+                    const zip = document.getElementById('zip').value;
+
+                    if (!city && !zip) {
+                        alert('Please enter either a city name or zip code');
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    }
+
+                    const startDate = document.getElementById('startDate').value;
+                    const startTime = document.getElementById('startTime').value;
+                    const endDate = document.getElementById('endDate').value;
+                    const endTime = document.getElementById('endTime').value;
+
+                    if (!startDate || !startTime || !endDate || !endTime) {
+                        alert('Please enter complete date and time values');
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    }
+
+                    const start = new Date(startDate + 'T' + startTime);
+                    const end = new Date(endDate + 'T' + endTime);
+
+                    if (end <= start) {
+                        alert('End date/time must be after start date/time');
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                    }
+
+                    // Check if date range is too wide (more than 7 days)
+                    const daysDiff = (end - start) / (1000 * 60 * 60 * 24);
+                    if (daysDiff > 7) {
+                        if (!confirm('Date range is greater than 7 days which may exceed available historical data. Continue anyway?')) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return;
+                        }
+                    }
+
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // Set default dates if not already set
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            if (startDateInput && !startDateInput.value) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                startDateInput.value = yesterday.toISOString().split('T')[0];
+            }
+
+            if (endDateInput && !endDateInput.value) {
+                const today = new Date();
+                endDateInput.value = today.toISOString().split('T')[0];
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

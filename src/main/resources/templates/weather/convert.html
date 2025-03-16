@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Temperature Conversion</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0"><i class="fas fa-exchange-alt me-2"></i> Temperature Conversion</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/ui/weather/convert}" method="post" class="needs-validation" novalidate>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Convert temperatures between Fahrenheit and Celsius for material specifications and safety guidelines.
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="conversionType" class="form-label">Conversion</label>
+                                <select class="form-select" id="conversionType" name="conversionType" required>
+                                    <option value="ftoc">Fahrenheit to Celsius</option>
+                                    <option value="ctof">Celsius to Fahrenheit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="temperature" class="form-label">Temperature</label>
+                                <input type="number" class="form-control" id="temperature" name="temperature"
+                                       step="0.1" required>
+                                <div class="invalid-feedback">Please enter a valid temperature.</div>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-calculator me-2"></i> Convert
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Conversion Result -->
+                    <div th:if="${originalTemp != null && convertedTemp != null}" class="alert alert-success text-center">
+                        <h4 class="mb-3">Conversion Result</h4>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <div class="display-6 me-3" th:text="${#numbers.formatDecimal(originalTemp, 0, 1) + '° ' + fromUnit}">32.0° F</div>
+                            <div class="h3 mx-3"><i class="fas fa-equals"></i></div>
+                            <div class="display-6 ms-3" th:text="${#numbers.formatDecimal(convertedTemp, 0, 1) + '° ' + toUnit}">0.0° C</div>
+                        </div>
+                    </div>
+
+                    <!-- Common Temperature Conversions -->
+                    <div class="mt-4">
+                        <h4>Common Construction Temperature References</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead class="table-dark">
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Fahrenheit (°F)</th>
+                                    <th>Celsius (°C)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Freezing Point of Water</td>
+                                    <td>32°F</td>
+                                    <td>0°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Minimum Temperature for Concrete Curing</td>
+                                    <td>50°F</td>
+                                    <td>10°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Optimal Concrete Curing Temperature</td>
+                                    <td>70°F</td>
+                                    <td>21.1°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Minimum Temperature for Paint Application</td>
+                                    <td>50°F</td>
+                                    <td>10°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Maximum Temperature for Outdoor Work (OSHA Recommendation)</td>
+                                    <td>90°F</td>
+                                    <td>32.2°C</td>
+                                </tr>
+                                <tr>
+                                    <td>High Heat Danger Threshold</td>
+                                    <td>95°F</td>
+                                    <td>35°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Cold Stress Risk Begins</td>
+                                    <td>39°F</td>
+                                    <td>4°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Asphalt Paving Minimum Temperature</td>
+                                    <td>40°F</td>
+                                    <td>4.4°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Optimal Drywall Compound Drying</td>
+                                    <td>70°F</td>
+                                    <td>21.1°C</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Conversion Formulas -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Fahrenheit to Celsius</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="h5 text-center mb-3">°C = (°F - 32) × 5/9</p>
+                                    <p class="text-center">
+                                        <strong>Example:</strong> 68°F = (68 - 32) × 5/9 = 36 × 5/9 = 20°C
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Celsius to Fahrenheit</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="h5 text-center mb-3">°F = (°C × 9/5) + 32</p>
+                                    <p class="text-center">
+                                        <strong>Example:</strong> 20°C = (20 × 9/5) + 32 = 36 + 32 = 68°F
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a th:href="@{/ui/weather}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Weather Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Form validation
+        (function() {
+            'use strict';
+
+            const forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // Add event listener to update input label based on selected conversion
+        document.addEventListener('DOMContentLoaded', function() {
+            const conversionTypeSelect = document.getElementById('conversionType');
+            const temperatureLabel = document.querySelector('label[for="temperature"]');
+
+            function updateLabel() {
+                if (conversionTypeSelect.value === 'ftoc') {
+                    temperatureLabel.textContent = 'Temperature (°F)';
+                } else {
+                    temperatureLabel.textContent = 'Temperature (°C)';
+                }
+            }
+
+            if (conversionTypeSelect && temperatureLabel) {
+                updateLabel(); // Set initial label
+                conversionTypeSelect.addEventListener('change', updateLabel);
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Historical Weather Results</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">
+                <i class="fas fa-history me-2"></i>
+                Historical Weather for <span th:text="${location}">Location</span>
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Showing weather data from
+                <strong th:text="${#temporals.format(startDateTime, 'yyyy-MM-dd HH:mm')}">2025-03-14 00:00</strong> to
+                <strong th:text="${#temporals.format(endDateTime, 'yyyy-MM-dd HH:mm')}">2025-03-15 23:59</strong>
+            </div>
+
+            <div th:if="${weatherRecords.isEmpty()}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>No weather records found for this time period.</strong> Try using current weather instead, or select a more recent date range.
+            </div>
+
+            <!-- Weather Records Table -->
+            <div th:if="${!weatherRecords.isEmpty()}" class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Condition</th>
+                        <th>Temperature</th>
+                        <th>Feels Like</th>
+                        <th>Humidity</th>
+                        <th>Wind</th>
+                        <th>Pressure</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="record : ${weatherRecords}">
+                        <td th:text="${#temporals.format(record.recordedAt, 'yyyy-MM-dd HH:mm')}">2025-03-15 14:00</td>
+                        <td>
+                            <span th:text="${record.condition}">Clear</span>
+                        </td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(record.temperatureF, 0, 1) + '°F'}">75.0°F</span>
+                            <br>
+                            <small class="text-muted" th:text="${#numbers.formatDecimal(record.temperatureC, 0, 1) + '°C'}">24.0°C</small>
+                        </td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(record.feelsLikeF, 0, 1) + '°F'}">78.0°F</span>
+                            <br>
+                            <small class="text-muted" th:text="${#numbers.formatDecimal(record.feelsLikeC, 0, 1) + '°C'}">25.5°C</small>
+                        </td>
+                        <td th:text="${record.humidity + '%'}">45%</td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(record.windSpeedMph, 0, 1) + ' mph'}">12.0 mph</span>
+                            <br>
+                            <small class="text-muted" th:text="${#numbers.formatDecimal(record.windSpeedKph, 0, 1) + ' kph'}">19.3 kph</small>
+                        </td>
+                        <td th:text="${#numbers.formatDecimal(record.pressureInHg, 0, 2) + ' inHg'}">29.92 inHg</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <a th:href="@{/ui/weather/history}" class="btn btn-secondary">
+                    <i class="fas fa-search me-1"></i> New Search
+                </a>
+                <div>
+                    <a th:href="@{/ui/weather/current}" class="btn btn-info">
+                        <i class="fas fa-cloud-sun me-1"></i> Current Weather
+                    </a>
+                    <a th:href="@{/ui/weather}" class="btn btn-primary ms-2">
+                        <i class="fas fa-home me-1"></i> Weather Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Charts (only show if we have data) -->
+    <div th:if="${!weatherRecords.isEmpty()}" class="row">
+        <!-- Temperature Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-temperature-high me-2"></i> Temperature Trend</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="temperatureChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Condition Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-cloud-sun me-2"></i> Weather Conditions</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="conditionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Construction Impact Analysis (only show if we have data) -->
+    <div th:if="${!weatherRecords.isEmpty()}" class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0"><i class="fas fa-hard-hat me-2"></i> Construction Impact Analysis</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Weather Summary</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th class="bg-light">Average Temperature</th>
+                                <td>
+                                    <span id="avgTemperature">--</span>°F
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Temperature Range</th>
+                                <td>
+                                    <span id="minTemperature">--</span>°F to
+                                    <span id="maxTemperature">--</span>°F
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Precipitation Conditions</th>
+                                <td id="precipitationSummary">--</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">Wind Conditions</th>
+                                <td id="windSummary">--</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h4>Site Work Recommendations</h4>
+                    <div class="alert alert-secondary">
+                        <p><i class="fas fa-clipboard-check me-2"></i> <strong>Based on Historical Data:</strong></p>
+                        <ul id="recommendations" class="mb-0">
+                            <li>Loading recommendations...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script th:inline="javascript">
+        // Get weather data from Thymeleaf
+        const weatherData = /*[[${weatherRecords}]]*/ [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (weatherData && weatherData.length > 0) {
+                createTemperatureChart();
+                createConditionChart();
+                updateWeatherSummary();
+                generateRecommendations();
+            }
+        });
+
+        function createTemperatureChart() {
+            const labels = weatherData.map(record => {
+                const date = new Date(record.recordedAt);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            });
+
+            const temperatures = weatherData.map(record => record.temperatureF);
+            const feelsLike = weatherData.map(record => record.feelsLikeF);
+
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Temperature (°F)',
+                            data: temperatures,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Feels Like (°F)',
+                            data: feelsLike,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (°F)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createConditionChart() {
+            // Count occurrences of each weather condition
+            const conditionCounts = {};
+            weatherData.forEach(record => {
+                const condition = record.condition;
+                conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
+            });
+
+            // Prepare data for chart
+            const labels = Object.keys(conditionCounts);
+            const data = Object.values(conditionCounts);
+
+            // Color mapping for weather conditions
+            const colorMap = {
+                'Clear': 'rgba(255, 193, 7, 0.8)',
+                'Clouds': 'rgba(108, 117, 125, 0.8)',
+                'Rain': 'rgba(0, 123, 255, 0.8)',
+                'Drizzle': 'rgba(23, 162, 184, 0.8)',
+                'Thunderstorm': 'rgba(52, 58, 64, 0.8)',
+                'Snow': 'rgba(248, 249, 250, 0.8)',
+                'Mist': 'rgba(173, 181, 189, 0.8)',
+                'Fog': 'rgba(173, 181, 189, 0.8)'
+            };
+
+            const backgroundColor = labels.map(label => colorMap[label] || 'rgba(0, 123, 255, 0.8)');
+
+            const ctx = document.getElementById('conditionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: backgroundColor.map(color => color.replace('0.8', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Weather Condition Distribution'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateWeatherSummary() {
+            // Calculate temperature statistics
+            const temperatures = weatherData.map(record => record.temperatureF);
+            const avgTemp = temperatures.reduce((sum, temp) => sum + temp, 0) / temperatures.length;
+            const minTemp = Math.min(...temperatures);
+            const maxTemp = Math.max(...temperatures);
+
+            document.getElementById('avgTemperature').textContent = avgTemp.toFixed(1);
+            document.getElementById('minTemperature').textContent = minTemp.toFixed(1);
+            document.getElementById('maxTemperature').textContent = maxTemp.toFixed(1);
+
+            // Analyze precipitation conditions
+            const rainyRecords = weatherData.filter(record => record.isRainy);
+            const snowyRecords = weatherData.filter(record => record.isSnowy);
+            const nonClearRecords = weatherData.filter(record => !record.isClear);
+
+            const rainyPercentage = (rainyRecords.length / weatherData.length) * 100;
+            const snowyPercentage = (snowyRecords.length / weatherData.length) * 100;
+            const cloudyPercentage = (nonClearRecords.length / weatherData.length) * 100;
+
+            let precipitationSummary = '';
+            if (rainyPercentage > 0 || snowyPercentage > 0) {
+                let summary = [];
+                if (rainyPercentage > 0) {
+                    summary.push(`<span class="text-primary">Rain (${rainyPercentage.toFixed(0)}% of records)</span>`);
+                }
+                if (snowyPercentage > 0) {
+                    summary.push(`<span class="text-info">Snow (${snowyPercentage.toFixed(0)}% of records)</span>`);
+                }
+                precipitationSummary = summary.join(', ');
+            } else if (cloudyPercentage > 50) {
+                precipitationSummary = `<span class="text-warning">Mostly cloudy (${cloudyPercentage.toFixed(0)}% of records)</span>`;
+            } else {
+                precipitationSummary = '<span class="text-success">Mostly clear conditions</span>';
+            }
+            document.getElementById('precipitationSummary').innerHTML = precipitationSummary;
+
+            // Analyze wind conditions
+            const windSpeeds = weatherData.map(record => record.windSpeedMph);
+            const avgWindSpeed = windSpeeds.reduce((sum, speed) => sum + speed, 0) / windSpeeds.length;
+            const maxWindSpeed = Math.max(...windSpeeds);
+
+            let windSummary = '';
+            if (maxWindSpeed > 25) {
+                windSummary = `<span class="text-danger">High winds detected (max: ${maxWindSpeed.toFixed(1)} mph, avg: ${avgWindSpeed.toFixed(1)} mph)</span>`;
+            } else if (maxWindSpeed > 15) {
+                windSummary = `<span class="text-warning">Moderate winds (max: ${maxWindSpeed.toFixed(1)} mph, avg: ${avgWindSpeed.toFixed(1)} mph)</span>`;
+            } else {
+                windSummary = `<span class="text-success">Light winds (max: ${maxWindSpeed.toFixed(1)} mph, avg: ${avgWindSpeed.toFixed(1)} mph)</span>`;
+            }
+            document.getElementById('windSummary').innerHTML = windSummary;
+        }
+
+        function generateRecommendations() {
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+
+            const temperatures = weatherData.map(record => record.temperatureF);
+            const avgTemp = temperatures.reduce((sum, temp) => sum + temp, 0) / temperatures.length;
+            const minTemp = Math.min(...temperatures);
+            const maxTemp = Math.max(...temperatures);
+
+            const windSpeeds = weatherData.map(record => record.windSpeedMph);
+            const maxWindSpeed = Math.max(...windSpeeds);
+
+            const rainyRecords = weatherData.filter(record => record.isRainy);
+            const snowyRecords = weatherData.filter(record => record.isSnowy);
+            const severeWeatherRecords = weatherData.filter(record => record.severeWeather);
+
+            const hasPrecipitation = rainyRecords.length > 0 || snowyRecords.length > 0;
+            const hasSevereWeather = severeWeatherRecords.length > 0;
+
+            const recommendations = [];
+
+            // Temperature recommendations
+            if (minTemp < 32) {
+                recommendations.push('Implement cold weather protocols for concrete work and material handling due to freezing temperatures.');
+            }
+
+            if (maxTemp > 90) {
+                recommendations.push('Schedule regular hydration breaks and monitor workers for heat stress due to high temperatures.');
+            }
+
+            // Wind recommendations
+            if (maxWindSpeed > 25) {
+                recommendations.push('Suspend crane operations and secure loose materials during high wind periods.');
+            } else if (maxWindSpeed > 15) {
+                recommendations.push('Use caution with lifting operations when winds exceed 15 mph.');
+            }
+
+            // Precipitation recommendations
+            if (rainyRecords.length > 0) {
+                const rainyPercentage = (rainyRecords.length / weatherData.length) * 100;
+                if (rainyPercentage > 50) {
+                    recommendations.push('Plan for significant rain impact. Protect excavations and schedule indoor work when possible.');
+                } else {
+                    recommendations.push('Prepare for intermittent rain. Have coverings available for sensitive materials.');
+                }
+            }
+
+            if (snowyRecords.length > 0) {
+                recommendations.push('Prepare snow removal equipment and de-icing materials. Monitor accumulation on structures.');
+            }
+
+            if (hasSevereWeather) {
+                recommendations.push('Be alert for severe weather warnings. Establish clear evacuation procedures and sheltering locations.');
+            }
+
+            // General recommendations based on average conditions
+            if (minTemp > 45 && maxTemp < 85 && maxWindSpeed < 15 && !hasPrecipitation) {
+                recommendations.push('Weather conditions are generally favorable for all construction activities.');
+            }
+
+            if (avgTemp < 50) {
+                recommendations.push('Consider heated enclosures for temperature-sensitive activities like concrete curing.');
+            }
+
+            // Display recommendations
+            if (recommendations.length === 0) {
+                recommendationsList.innerHTML = '<li>No specific recommendations based on the weather data.</li>';
+            } else {
+                recommendations.forEach(recommendation => {
+                    const li = document.createElement('li');
+                    li.textContent = recommendation;
+                    recommendationsList.appendChild(li);
+                });
+            }
+        }
+    </script>
+</th:block>
+</body>
+</html>

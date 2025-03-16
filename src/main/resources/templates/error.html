@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Error</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Error</h2>
+                </div>
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-circle text-danger fa-5x"></i>
+                    </div>
+
+                    <h3 th:text="${status} ?: 'Error'">Error Status</h3>
+                    <p class="lead" th:text="${error} ?: 'An unexpected error occurred.'">Error Message</p>
+
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i> Return to Home Page
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer" th:if="${timestamp}">
+                    <div class="text-muted">
+                        <small>
+                            <span th:text="'Time: ' + ${#dates.format(timestamp, 'yyyy-MM-dd HH:mm:ss')}">Time: 2025-03-15 12:00:00</span>
+                            <span th:if="${path}" th:text="' | Path: ' + ${path}"> | Path: /error</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Details (only shown to admins) -->
+            <div class="card mt-4" th:if="${trace}">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0"><i class="fas fa-bug me-2"></i> Technical Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This information is intended for technical support and developers.
+                    </div>
+
+                    <div class="mt-3">
+                        <h5>Exception:</h5>
+                        <p th:text="${exception}">Exception details</p>
+                    </div>
+
+                    <div class="mt-3">
+                        <h5>Stack Trace:</h5>
+                        <pre class="bg-light p-3 overflow-auto" style="max-height: 300px;"><code th:text="${trace}">Stack trace</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

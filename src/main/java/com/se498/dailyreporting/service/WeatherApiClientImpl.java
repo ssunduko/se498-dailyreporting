@@ -61,6 +61,7 @@ public class WeatherApiClientImpl implements WeatherApiClient {
                 .path("/forecast")
                 .queryParam("zip", location.getZipCode())
                 .queryParam("mode", "json")
+                .queryParam("units", "imperial")
                 .queryParam("appid", apiKey)
                 .build()
                 .toUriString();
@@ -80,6 +81,8 @@ public class WeatherApiClientImpl implements WeatherApiClient {
             if (response == null || response.getList() == null || response.getList().isEmpty()) {
                 throw new WeatherApiException("Empty or invalid response from OpenWeatherMap", "OpenWeatherMap");
             }
+
+            log.debug(response.toString());
 
             return mapToWeatherRecord(response, location);
 

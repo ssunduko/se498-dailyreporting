@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Help & Documentation</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <!-- Help Navigation -->
+            <div class="card sticky-top" style="top: 76px;">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-book me-2"></i> Help Topics</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="help-nav">
+                        <a href="#getting-started" class="list-group-item list-group-item-action">
+                            <i class="fas fa-play-circle me-2"></i> Getting Started
+                        </a>
+                        <a href="#daily-reports" class="list-group-item list-group-item-action">
+                            <i class="fas fa-clipboard-list me-2"></i> Daily Reports
+                        </a>
+                        <a href="#weather-service" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cloud-sun me-2"></i> Weather Services
+                        </a>
+                        <a href="#user-accounts" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users me-2"></i> User Accounts
+                        </a>
+                        <a href="#api-access" class="list-group-item list-group-item-action">
+                            <i class="fas fa-plug me-2"></i> API Access
+                        </a>
+                        <a href="#troubleshooting" class="list-group-item list-group-item-action">
+                            <i class="fas fa-wrench me-2"></i> Troubleshooting
+                        </a>
+                        <a href="#faq" class="list-group-item list-group-item-action">
+                            <i class="fas fa-question-circle me-2"></i> FAQ
+                        </a>
+                        <a href="#contact-support" class="list-group-item list-group-item-action">
+                            <i class="fas fa-headset me-2"></i> Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Help Content -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-question-circle me-2"></i> Help & Documentation</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Getting Started Section -->
+                    <section id="getting-started" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-play-circle me-2"></i> Getting Started</h3>
+
+                        <p>Welcome to the Construction Daily Reporting System. This guide will help you get started with the application.</p>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> If you're new to the system, we recommend going through this guide step by step.
+                        </div>
+
+                        <h4>System Overview</h4>
+                        <p>
+                            The Construction Daily Reporting System helps construction teams document daily activities,
+                            track progress, and monitor weather conditions that may affect site operations. The system features:
+                        </p>
+
+                        <ul>
+                            <li><strong>Daily Reports:</strong> Create and manage reports of daily construction activities</li>
+                            <li><strong>Weather Services:</strong> Access current and historical weather data for construction sites</li>
+                            <li><strong>User Management:</strong> Different roles and permissions for team members</li>
+                            <li><strong>API Access:</strong> Integrate with other systems via REST, GraphQL, SOAP, or gRPC</li>
+                        </ul>
+
+                        <h4>Quick Start Guide</h4>
+                        <ol>
+                            <li>Log in with your provided credentials</li>
+                            <li>Navigate to the Daily Reports section from the main menu</li>
+                            <li>Click "Create New Report" to start documenting daily activities</li>
+                            <li>Fill in the required information and add activities as needed</li>
+                            <li>Submit the report for approval when complete</li>
+                        </ol>
+
+                        <div class="text-center mt-4">
+                            <a href="#" class="btn btn-primary">
+                                <i class="fas fa-download me-2"></i> Download User Manual (PDF)
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Daily Reports Section -->
+                    <section id="daily-reports" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-clipboard-list me-2"></i> Daily Reports</h3>
+
+                        <h4>Creating a New Report</h4>
+                        <p>
+                            To create a new daily report, navigate to the Reports section and click on the "Create New Report" button.
+                            You'll need to provide the following information:
+                        </p>
+
+                        <ul>
+                            <li><strong>Project ID:</strong> The identifier for the construction project</li>
+                            <li><strong>Report Date:</strong> The date for which the report is being created</li>
+                            <li><strong>Notes:</strong> Any general notes about the day's activities or conditions</li>
+                        </ul>
+
+                        <h4>Adding Activities</h4>
+                        <p>
+                            After creating a report, you can add individual activities by clicking the "Add Activity" button.
+                            For each activity, provide:
+                        </p>
+
+                        <ul>
+                            <li><strong>Category:</strong> The type of activity (e.g., Excavation, Concrete, Electrical)</li>
+                            <li><strong>Description:</strong> Details about the activity</li>
+                            <li><strong>Start/End Time:</strong> When the activity began and ended</li>
+                            <li><strong>Progress:</strong> The percentage of completion for the activity</li>
+                            <li><strong>Status:</strong> The current state (Not Started, In Progress, Completed, Blocked)</li>
+                            <li><strong>Personnel:</strong> Team members involved in the activity</li>
+                        </ul>
+
+                        <h4>Report Workflow</h4>
+                        <p>Reports go through the following status transitions:</p>
+
+                        <ol>
+                            <li><strong>DRAFT:</strong> Initial state, can be edited</li>
+                            <li><strong>SUBMITTED:</strong> Sent for review, awaiting approval</li>
+                            <li><strong>APPROVED:</strong> Finalized and cannot be modified</li>
+                            <li><strong>REJECTED:</strong> Returned for corrections</li>
+                        </ol>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> Once a report is approved, it cannot be modified. Ensure all information is accurate before submitting.
+                        </div>
+                    </section>
+
+                    <!-- Weather Services Section -->
+                    <section id="weather-service" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-cloud-sun me-2"></i> Weather Services</h3>
+
+                        <h4>Current Weather</h4>
+                        <p>
+                            To check current weather conditions for a construction site, navigate to the Weather section
+                            and select "Current Weather." Enter either a city name or zip code to retrieve the current conditions.
+                        </p>
+
+                        <h4>Historical Weather Data</h4>
+                        <p>
+                            The system allows you to retrieve weather data for past dates, which can be useful for documentation
+                            and validation purposes. To access historical data:
+                        </p>
+
+                        <ol>
+                            <li>Navigate to the Weather section and select "Historical Weather"</li>
+                            <li>Enter the location information (city or zip code)</li>
+                            <li>Specify the date range (limited to 7 days in the past)</li>
+                            <li>Submit the request to view historical conditions</li>
+                        </ol>
+
+                        <h4>Weather Alerts</h4>
+                        <p>
+                            The Weather Alerts feature analyzes current conditions and identifies potential hazards
+                            that might affect construction activities. The system checks for:
+                        </p>
+
+                        <ul>
+                            <li>Extreme temperatures (high heat or freezing conditions)</li>
+                            <li>High winds that may affect crane operations</li>
+                            <li>Precipitation that could impact excavation or concrete work</li>
+                            <li>Lightning hazards</li>
+                            <li>Poor visibility conditions</li>
+                        </ul>
+
+                        <h4>Temperature Conversion</h4>
+                        <p>
+                            The Temperature Conversion tool allows you to convert between Fahrenheit and Celsius,
+                            which can be helpful when working with material specifications or international standards.
+                        </p>
+                    </section>
+
+                    <!-- Additional sections would continue here -->
+                    <section id="user-accounts" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-users me-2"></i> User Accounts</h3>
+                        <p>Documentation for user account management would go here.</p>
+                    </section>
+
+                    <section id="api-access" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-plug me-2"></i> API Access</h3>
+                        <p>Information about API access and integration would go here.</p>
+                    </section>
+
+                    <section id="troubleshooting" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-wrench me-2"></i> Troubleshooting</h3>
+                        <p>Troubleshooting tips and solutions would go here.</p>
+                    </section>
+
+                    <section id="faq" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-question-circle me-2"></i> Frequently Asked Questions</h3>
+                        <p>Common questions and answers would go here.</p>
+                    </section>
+
+                    <section id="contact-support" class="mb-5">
+                        <h3 class="border-bottom pb-2"><i class="fas fa-headset me-2"></i> Contact Support</h3>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-envelope me-2"></i> Email Support</h4>
+                                        <p>Send inquiries to our support team:</p>
+                                        <p><a href="mailto:support@constructionreporting.com">support@constructionreporting.com</a></p>
+                                        <p>Response time: Within 24 business hours</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4><i class="fas fa-phone me-2"></i> Phone Support</h4>
+                                        <p>Call our technical support hotline:</p>
+                                        <p><a href="tel:+18001234567">1-800-123-4567</a></p>
+                                        <p>Hours: Monday-Friday, 8am-6pm EST</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Highlight active section in navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('#help-nav a');
+
+            // Add smooth scrolling to nav links
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 90,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Highlight active section on scroll
+            window.addEventListener('scroll', function() {
+                let current = '';
+
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop - 100;
+                    const sectionHeight = section.offsetHeight;
+
+                    if (pageYOffset >= sectionTop && pageYOffset < sectionTop + sectionHeight) {
+                        current = '#' + section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

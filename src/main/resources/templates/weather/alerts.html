@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Weather Alerts</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Weather Alerts</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/ui/weather/alerts}" method="post" class="needs-validation" novalidate>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Enter a location to check for active weather alerts and conditions that might affect construction operations.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City Name</label>
+                                <input type="text" class="form-control" id="city" name="city"
+                                       placeholder="Enter city name (e.g. Chicago)">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stateOrProvince" class="form-label">State/Province (optional)</label>
+                                <input type="text" class="form-control" id="stateOrProvince" name="stateOrProvince"
+                                       placeholder="Enter state/province (e.g. IL)">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="zip" class="form-label">Zip/Postal Code</label>
+                                <input type="text" class="form-control" id="zip" name="zip"
+                                       placeholder="Enter zip/postal code (e.g. 60601)">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country"
+                                       placeholder="Country code (default: US)" value="US">
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-bell me-2"></i> Check Weather Alerts
+                            </button>
+                            <a th:href="@{/ui/weather}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i> Construction Weather Alerts</h4>
+                </div>
+                <div class="card-body">
+                    <p>The weather alert system monitors for conditions that can affect construction site operations, including:</p>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item list-group-item-danger">
+                                    <i class="fas fa-bolt me-2"></i> Thunderstorms & Lightning
+                                </li>
+                                <li class="list-group-item list-group-item-danger">
+                                    <i class="fas fa-wind me-2"></i> High Winds (> 25 mph)
+                                </li>
+                                <li class="list-group-item list-group-item-danger">
+                                    <i class="fas fa-temperature-low me-2"></i> Freezing Temperatures
+                                </li>
+                                <li class="list-group-item list-group-item-danger">
+                                    <i class="fas fa-cloud-rain me-2"></i> Heavy Rain
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group">
+                                <li class="list-group-item list-group-item-warning">
+                                    <i class="fas fa-temperature-high me-2"></i> Extreme Heat (> 90°F)
+                                </li>
+                                <li class="list-group-item list-group-item-warning">
+                                    <i class="fas fa-wind me-2"></i> Moderate Winds (15-25 mph)
+                                </li>
+                                <li class="list-group-item list-group-item-warning">
+                                    <i class="fas fa-snowflake me-2"></i> Snow & Ice
+                                </li>
+                                <li class="list-group-item list-group-item-warning">
+                                    <i class="fas fa-smog me-2"></i> Poor Visibility (Fog, Mist)
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-secondary mt-3">
+                        <p class="mb-0">
+                            <i class="fas fa-hard-hat me-2"></i> <strong>Site Manager Tip:</strong>
+                            Always check weather conditions and alerts before starting high-risk activities
+                            such as crane operations, roofing, or excavations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Form validation
+        (function() {
+            'use strict';
+
+            const forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    const city = document.getElementById('city').value;
+                    const zip = document.getElementById('zip').value;
+
+                    if (!city && !zip) {
+                        alert('Please enter either a city name or zip code');
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }, false);
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>

@@ -85,7 +85,7 @@ public class WeatherReportingServiceImpl implements WeatherReportingService {
 
         log.debug("Retrieving historical weather for {} from {} to {}", location, start, end);
         return weatherRecordRepository.findByLocationZipAndFetchedAtBetween(
-                location.getCity(), start, end);
+                location.getZipCode(), start, end);
     }
 
     /**
@@ -102,7 +102,7 @@ public class WeatherReportingServiceImpl implements WeatherReportingService {
         }
 
         log.debug("Retrieving {} most recent weather records for {}", limit, location);
-        return weatherRecordRepository.findRecentByZip(location.getCity(), limit);
+        return weatherRecordRepository.findRecentByZip(location.getZipCode(), limit);
     }
 
     /**

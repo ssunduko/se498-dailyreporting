@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>Current Weather</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-cloud-sun me-2"></i> Current Weather</h2>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/ui/weather/current}" method="post" class="needs-validation" novalidate>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Enter either a city name or zip code to get current weather conditions.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="city" class="form-label">City Name</label>
+                                <input type="text" class="form-control" id="city" name="city"
+                                       placeholder="Enter city name (e.g. Chicago)">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stateOrProvince" class="form-label">State/Province (optional)</label>
+                                <input type="text" class="form-control" id="stateOrProvince" name="stateOrProvince"
+                                       placeholder="Enter state/province (e.g. IL)">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="zip" class="form-label">Zip/Postal Code</label>
+                                <input type="text" class="form-control" id="zip" name="zip"
+                                       placeholder="Enter zip/postal code (e.g. 60601)">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country"
+                                       placeholder="Country code (default: US)" value="US">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="includeAlerts" name="includeAlerts" value="true">
+                            <label class="form-check-label" for="includeAlerts">Include weather alerts</label>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i> Get Weather
+                            </button>
+                            <a th:href="@{/ui/weather}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-arrow-left me-2"></i> Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Results will be displayed in current-results.html -->
+
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // Form validation
+        (function() {
+            'use strict';
+
+            const forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms).forEach(function(form) {
+                form.addEventListener('submit', function(event) {
+                    const city = document.getElementById('city').value;
+                    const zip = document.getElementById('zip').value;
+
+                    if (!city && !zip) {
+                        alert('Please enter either a city name or zip code');
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }, false);
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>
