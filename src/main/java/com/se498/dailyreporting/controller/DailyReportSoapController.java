@@ -19,6 +19,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +43,7 @@ public class DailyReportSoapController {
 
     @WebMethod(operationName = "createReport")
     @WebResult(name = "reportResponse")
+    @Transactional
     public DailyReportSoapResponse createReport(
             @WebParam(name = "createReportRequest") CreateReportRequest request) {
 
@@ -68,6 +70,7 @@ public class DailyReportSoapController {
 
     @WebMethod(operationName = "getReport")
     @WebResult(name = "reportResponse")
+    @Transactional(readOnly = true)
     public DailyReportSoapResponse getReport(
             @WebParam(name = "reportId") String reportId) {
 
