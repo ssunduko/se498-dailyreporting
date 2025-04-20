@@ -90,7 +90,7 @@
             </div>
 
             <!-- Primary Actions Container -->
-            <div class="action-container mt-4" th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
+            <div class="action-container mt-4" th:if="${#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED')}">
                 <h5 class="action-title"><i class="bi bi-lightning-fill text-warning"></i> Quick Actions</h5>
                 <div class="d-flex flex-wrap gap-2">
                     <a th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}" class="btn btn-success btn-action">
@@ -101,7 +101,7 @@
                         <i class="bi bi-pencil-square me-2"></i> Edit Report
                     </a>
 
-                    <form th:if="${report.status == 'DRAFT'}" th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
+                    <form th:if="${#strings.contains(report.status, 'DRAFT')}" th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
                         <button type="submit" class="btn btn-primary btn-action">
                             <i class="bi bi-check-circle me-2"></i> Submit Report
                         </button>
@@ -114,7 +114,7 @@
             </div>
 
             <!-- Reviewer Actions -->
-            <div class="action-container mt-4" th:if="${report.status == 'SUBMITTED'}">
+            <div class="action-container mt-4" th:if="${#strings.contains(report.status, 'SUBMITTED') }">
                 <h5 class="action-title"><i class="bi bi-clipboard-check text-primary"></i> Reviewer Actions</h5>
                 <div class="d-flex flex-wrap gap-2">
                     <form th:action="@{/ui/reports/{id}/approve(id=${report.id})}" method="post" class="d-inline">
@@ -142,7 +142,7 @@
     <div class="card mb-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h3>Activities</h3>
-            <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
+            <a th:if="${#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED')}"
                th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
                class="btn btn-success">
                 <i class="bi bi-plus-circle me-2"></i> Add Activity
@@ -168,11 +168,22 @@
                 <h4 class="mb-3">No Activities Added Yet</h4>
                 <p class="text-muted mb-4">Start by adding activities to track progress on this report.</p>
 
-                <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
+                <!-- The button should always be visible when the report is in an editable state -->
+                <a th:if="${#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED')}"
                    th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
                    class="btn btn-lg btn-success">
                     <i class="bi bi-plus-circle me-2"></i> Add First Activity
                 </a>
+
+                <!-- Show a disabled button with explanation if report is not editable -->
+                <div th:unless="${#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED')}">
+                    <button class="btn btn-lg btn-secondary" disabled>
+                        <i class="bi bi-plus-circle me-2"></i> Add Activity
+                    </button>
+                    <p class="text-muted mt-2">
+                        <small>Activities can only be added to reports in DRAFT or REJECTED status</small>
+                    </p>
+                </div>
             </div>
 
             <div th:if="${activities != null && !activities.isEmpty()}" class="row row-cols-1 row-cols-md-2 g-4">
@@ -238,7 +249,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer d-flex justify-content-between" th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
+                        <div class="card-footer d-flex justify-content-between" th:if="${#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED')}">
                             <a th:href="@{/ui/reports/activities/{id}/edit(id=${activity.id})}" class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </a>
@@ -256,7 +267,7 @@
             </div>
 
             <!-- Add Activity button at the bottom of activities list -->
-            <div th:if="${activities != null && !activities.isEmpty() && (report.status == 'DRAFT' || report.status == 'REJECTED')}" class="text-center mt-4">
+            <div th:if="${activities != null && !activities.isEmpty() && (#strings.contains(report.status, 'DRAFT') || #strings.contains(report.status, 'REJECTED'))}" class="text-center mt-4">
                 <a th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}" class="btn btn-success">
                     <i class="bi bi-plus-circle me-2"></i> Add Another Activity
                 </a>
