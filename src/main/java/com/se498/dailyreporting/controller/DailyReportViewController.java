@@ -180,22 +180,25 @@ public class DailyReportViewController {
     }
 
     /**
-     * Form to edit a report
+     * Form to edit a report (updated version that fetches activities)
      */
     @GetMapping("/{reportId}/edit")
     public String editReportForm(@PathVariable String reportId, Model model) {
         try {
-            Optional<DailyReport> reportOpt = reportingService.getReport(reportId);
+            // Get report with all activities included
+            Optional<DailyReport> reportOpt = reportingService.findByIdWithActivities(reportId);
 
             if (reportOpt.isPresent()) {
                 DailyReport report = reportOpt.get();
 
+                // Create request DTO to populate the form
                 DailyReportRequest request = new DailyReportRequest();
                 request.setProjectId(report.getProjectId());
                 request.setReportDate(report.getReportDate());
                 request.setNotes(report.getNotes());
 
-                model.addAttribute("report", request);
+                model.addAttribute("report", report);  // Add full report with activities
+                model.addAttribute("reportRequest", request);  // Form data
                 model.addAttribute("reportId", reportId);
                 model.addAttribute("pageTitle", "Edit Report");
 

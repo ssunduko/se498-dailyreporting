@@ -32,6 +32,26 @@
             color: #999;
             font-style: italic;
         }
+
+        /* New styles for enhanced buttons */
+        .btn-action {
+            font-weight: 500;
+            padding: 8px 16px;
+        }
+
+        .action-container {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .action-title {
+            margin-bottom: 10px;
+            color: #495057;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -41,9 +61,9 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>Daily Report Details</h3>
             <div>
-                    <span class="badge text-white"
-                          th:classappend="${'badge-' + #strings.toLowerCase(report.status)}"
-                          th:text="${report.status}">STATUS</span>
+                <span class="badge text-white"
+                      th:classappend="${'badge-' + #strings.toLowerCase(report.status)}"
+                      th:text="${report.status}">STATUS</span>
             </div>
         </div>
         <div class="card-body">
@@ -69,50 +89,63 @@
                 </div>
             </div>
 
-            <!-- Report Actions -->
-            <div class="mt-4 d-flex justify-content-between">
-                <div>
-                    <a th:href="@{/ui/reports}" class="btn btn-secondary">Back to Reports</a>
-                    <a th:href="@{/ui/reports/{id}/edit(id=${report.id})}" class="btn btn-warning"
-                       th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
-                        <i class="bi bi-pencil-square"></i> Edit
+            <!-- Primary Actions Container -->
+            <div class="action-container mt-4" th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
+                <h5 class="action-title"><i class="bi bi-lightning-fill text-warning"></i> Quick Actions</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <a th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}" class="btn btn-success btn-action">
+                        <i class="bi bi-plus-circle me-2"></i> Add New Activity
                     </a>
-                </div>
 
-                <div>
-                    <!-- Report Action Forms -->
+                    <a th:href="@{/ui/reports/{id}/edit(id=${report.id})}" class="btn btn-warning btn-action">
+                        <i class="bi bi-pencil-square me-2"></i> Edit Report
+                    </a>
+
                     <form th:if="${report.status == 'DRAFT'}" th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Submit
+                        <button type="submit" class="btn btn-primary btn-action">
+                            <i class="bi bi-check-circle me-2"></i> Submit Report
                         </button>
                     </form>
 
-                    <form th:if="${report.status == 'SUBMITTED'}" th:action="@{/ui/reports/{id}/approve(id=${report.id})}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle"></i> Approve
-                        </button>
-                    </form>
-
-                    <button th:if="${report.status == 'SUBMITTED'}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                        <i class="bi bi-x-circle"></i> Reject
-                    </button>
-
-                    <button th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="bi bi-trash"></i> Delete
+                    <button class="btn btn-danger btn-action" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash me-2"></i> Delete Report
                     </button>
                 </div>
+            </div>
+
+            <!-- Reviewer Actions -->
+            <div class="action-container mt-4" th:if="${report.status == 'SUBMITTED'}">
+                <h5 class="action-title"><i class="bi bi-clipboard-check text-primary"></i> Reviewer Actions</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <form th:action="@{/ui/reports/{id}/approve(id=${report.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-success btn-action">
+                            <i class="bi bi-check-circle me-2"></i> Approve Report
+                        </button>
+                    </form>
+
+                    <button class="btn btn-danger btn-action" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle me-2"></i> Reject Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="mt-4">
+                <a th:href="@{/ui/reports}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Reports
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Activities Section -->
     <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h3>Activities</h3>
             <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
                th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
                class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Add Activity
+                <i class="bi bi-plus-circle me-2"></i> Add Activity
             </a>
         </div>
         <div class="card-body">
@@ -127,12 +160,18 @@
                 </div>
             </div>
 
-            <div th:if="${activities == null || activities.isEmpty()}" class="alert alert-info">
-                <p>No activities added to this report yet.</p>
+            <!-- Empty state with prominent Add Activity button -->
+            <div th:if="${activities == null || activities.isEmpty()}" class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-clipboard-plus text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="mb-3">No Activities Added Yet</h4>
+                <p class="text-muted mb-4">Start by adding activities to track progress on this report.</p>
+
                 <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
                    th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
-                   class="btn btn-sm btn-primary mt-2">
-                    Add First Activity
+                   class="btn btn-lg btn-success">
+                    <i class="bi bi-plus-circle me-2"></i> Add First Activity
                 </a>
             </div>
 
@@ -214,6 +253,13 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Add Activity button at the bottom of activities list -->
+            <div th:if="${activities != null && !activities.isEmpty() && (report.status == 'DRAFT' || report.status == 'REJECTED')}" class="text-center mt-4">
+                <a th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i> Add Another Activity
+                </a>
             </div>
         </div>
     </div>

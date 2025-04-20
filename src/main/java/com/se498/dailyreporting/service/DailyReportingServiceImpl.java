@@ -388,4 +388,11 @@ public class DailyReportingServiceImpl implements DailyReportingService {
                     "Cannot modify report in " + report.getStatus() + " state");
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<DailyReport> findByIdWithActivities(String reportId) {
+        log.info("Fetching daily report with activities for ID: {}", reportId);
+        return reportRepository.findByIdWithActivities(reportId);
+    }
 }

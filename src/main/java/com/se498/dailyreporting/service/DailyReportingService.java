@@ -35,4 +35,6 @@ public interface DailyReportingService {
     double calculateReportProgress(String reportId);
     boolean isReportComplete(String reportId);
     long getTotalActivityDurationMinutes(String reportId);
+
+    Optional<DailyReport> findByIdWithActivities(String reportId);
 }
