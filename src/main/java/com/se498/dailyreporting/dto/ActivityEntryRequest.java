@@ -66,6 +66,9 @@ public class ActivityEntryRequest {
      */
     public void processPersonnelFromText() {
         if (personnelText != null && !personnelText.isEmpty()) {
+            // Clear existing personnel first to avoid duplicates
+            personnel.clear();
+
             String[] items = personnelText.split(",");
             for (String item : items) {
                 String trimmed = item.trim();

@@ -6,9 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -28,6 +26,45 @@ public class DailyReportRequest {
     private String notes;
 
     // Field for adding initial activities during report creation
-    @Valid
+    // No validation constraints on this field to ensure it's optional
     private List<ActivityEntryRequest> initialActivities = new ArrayList<>();
+
+    /**
+     * Utility method to check if the request has valid activities
+     * @return true if there are valid activities, false otherwise
+     */
+    public boolean hasValidActivities() {
+        if (initialActivities == null || initialActivities.isEmpty()) {
+            return false;
+        }
+
+        return initialActivities.stream()
+                .anyMatch(activity ->
+                        activity != null &&
+                                activity.getDescription() != null &&
+                                !activity.getDescription().isEmpty() &&
+                                activity.getCategory() != null &&
+                                !activity.getCategory().isEmpty()
+                );
+    }
+
+    /**
+     * Filter out invalid activities from the list
+     * @return filtered list with only valid activities
+     */
+    public List<ActivityEntryRequest> getValidActivities() {
+        if (initialActivities == null) {
+            return new ArrayList<>();
+        }
+
+        return initialActivities.stream()
+                .filter(activity ->
+                        activity != null &&
+                                activity.getDescription() != null &&
+                                !activity.getDescription().isEmpty() &&
+                                activity.getCategory() != null &&
+                                !activity.getCategory().isEmpty()
+                )
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

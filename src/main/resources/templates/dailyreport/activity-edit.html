@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle ?: 'Edit Activity'}">Edit Activity</title>
+    <title th:text="${pageTitle ?: 'Add Activity'}">Add Activity</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
@@ -11,11 +11,6 @@
             content: "*";
             color: red;
             margin-left: 4px;
-        }
-        .optional-label {
-            color: #6c757d;
-            font-style: italic;
-            font-size: 0.875em;
         }
         .help-text {
             font-size: 0.875em;
@@ -27,148 +22,123 @@
 <div class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <h3 th:text="${activityId != null ? 'Edit Activity' : 'Add New Activity'}">Edit Activity</h3>
+            <h3 th:text="${activityId != null ? 'Edit Activity' : 'Add Activity to Report'}">Add Activity</h3>
         </div>
         <div class="card-body">
             <div class="alert alert-info mb-4">
-                <p>Fields marked with <span class="text-danger">*</span> are required. All other fields are optional and will use default values if not provided.</p>
+                <p>Fields marked with <span class="text-danger">*</span> are required.</p>
             </div>
 
-            <form th:action="${activityId != null ? '/ui/reports/activities/' + activityId + '/edit' : '/ui/reports/' + reportId + '/activities/new'}"
-                  method="post" id="activityForm">
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                <span th:text="${error}">Error message</span>
+            </div>
 
-                <!-- Required fields section -->
-                <div class="mb-4">
-                    <h5>Required Information</h5>
-                    <hr>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label required-field">Description</label>
-                        <textarea id="description" name="description" class="form-control" rows="3" required th:text="${activity.description}"></textarea>
+            <!-- Report Info Summary -->
+            <div class="card mb-4">
+                <div class="card-body bg-light">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Report Details</h5>
+                            <p><strong>Project ID:</strong> <span th:text="${report.projectId}">PROJECT-123</span></p>
+                            <p><strong>Date:</strong> <span th:text="${#temporals.format(report.reportDate, 'yyyy-MM-dd')}">2025-04-20</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Status</h5>
+                            <p><strong>Current Status:</strong> <span th:text="${report.status}">DRAFT</span></p>
+                            <p><strong>Activities:</strong> <span th:text="${report.activities != null ? report.activities.size() : 0}">0</span></p>
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="mb-3">
-                        <label for="category" class="form-label required-field">Category</label>
-                        <input type="text" id="category" name="category" class="form-control" required th:value="${activity.category}">
+            <!-- Activity Form -->
+            <form th:action="${activityId != null ? '/ui/reports/activities/' + activityId + '/edit' : '/ui/reports/' + reportId + '/activities/new'}"
+                  method="post">
+
+                <!-- Required Fields -->
+                <div class="mb-3">
+                    <label for="description" class="form-label required-field">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="3" required
+                              th:text="${activity.description}"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="category" class="form-label required-field">Category</label>
+                    <input type="text" id="category" name="category" class="form-control" required
+                           th:value="${activity.category}">
+                </div>
+
+                <!-- Optional Fields -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="startTime" class="form-label">Start Time</label>
+                        <input type="text" id="startTime" name="startTime" class="form-control datepicker"
+                               placeholder="Select date & time" th:value="${activity.startTime}">
+                        <small class="help-text">If not provided, current time will be used</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="endTime" class="form-label">End Time</label>
+                        <input type="text" id="endTime" name="endTime" class="form-control datepicker"
+                               placeholder="Select date & time" th:value="${activity.endTime}">
+                        <small class="help-text">If not provided, start time + 1 hour will be used</small>
                     </div>
                 </div>
 
-                <!-- Optional fields section -->
-                <div class="mb-4">
-                    <h5>Optional Information <span class="optional-label">(will use defaults if not provided)</span></h5>
-                    <hr>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="startTime" class="form-label">Start Time</label>
-                            <input type="text" id="startTime" name="startTime" class="form-control datepicker" th:value="${activity.startTime}">
-                            <small class="help-text">If not provided, current time will be used</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="endTime" class="form-label">End Time</label>
-                            <input type="text" id="endTime" name="endTime" class="form-control datepicker" th:value="${activity.endTime}">
-                            <small class="help-text">If not provided, start time + 1 hour will be used</small>
-                        </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="progress" class="form-label">Progress (%)</label>
+                        <input type="number" id="progress" name="progress" class="form-control" min="0" max="100" value="0"
+                               th:value="${activity.progress}">
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="progress" class="form-label">Progress (%)</label>
-                            <input type="number" id="progress" name="progress" class="form-control" min="0" max="100" th:value="${activity.progress}">
-                            <small class="help-text">If not provided, 0% will be used</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="status" class="form-label">Status</label>
-                            <select id="status" name="status" class="form-select">
-                                <option value="">-- Select Status (Default: PLANNED) --</option>
-                                <option th:each="status : ${activityStatuses}"
-                                        th:value="${status}"
-                                        th:text="${status}"
-                                        th:selected="${activity.status == status}">
-                                    STATUS
-                                </option>
-                            </select>
-                            <small class="help-text">If not selected, PLANNED will be used</small>
-                        </div>
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="">-- Select Status (Default: PLANNED) --</option>
+                            <option th:each="statusOption : ${activityStatuses}"
+                                    th:value="${statusOption}"
+                                    th:text="${statusOption}"
+                                    th:selected="${activity.status == statusOption}">
+                                STATUS
+                            </option>
+                        </select>
+                        <small class="help-text">If not selected, PLANNED will be used</small>
                     </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea id="notes" name="notes" class="form-control" rows="3" th:text="${activity.notes}"></textarea>
-                    </div>
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3"
+                              th:text="${activity.notes}"></textarea>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="personnel" class="form-label">Personnel</label>
-                        <textarea id="personnel" class="form-control" rows="2"
-                                  placeholder="Enter names separated by commas"
-                                  th:text="${activity.personnel != null ? #strings.listJoin(activity.personnel, ', ') : ''}"></textarea>
-                        <small class="help-text">Enter names separated by commas</small>
-                    </div>
+                <!-- Personnel -->
+                <div class="mb-3">
+                    <label for="personnelText" class="form-label">Personnel</label>
+                    <textarea id="personnelText" name="personnelText" class="form-control" rows="2"
+                              placeholder="Enter names separated by commas (e.g., John Smith, Jane Doe)"
+                              th:text="${activity.personnel != null ? #strings.listJoin(activity.personnel, ', ') : ''}"></textarea>
+                    <small class="help-text">Enter personnel involved in this activity, separated by commas</small>
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a th:href="@{'/ui/reports/' + ${reportId}}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Activity</button>
+                    <a th:href="@{/ui/reports/{id}(id=${reportId})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary" th:text="${activityId != null ? 'Update Activity' : 'Add Activity'}">
+                        Add Activity
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    document.getElementById('activityForm').addEventListener('submit', function(e) {
-        const personnelField = document.getElementById('personnel');
-        const personnelValue = personnelField.value.trim();
-
-        if (personnelValue) {
-            // Instead of creating hidden inputs, we'll use the personnelText field
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'personnelText';
-            hiddenInput.value = personnelValue;
-            this.appendChild(hiddenInput);
-        }
-    });
-
-
     document.addEventListener("DOMContentLoaded", function() {
         // Initialize date pickers
         flatpickr(".datepicker", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
             time_24hr: true
-        });
-
-        // Handle form submission to process personnel data
-        document.getElementById('activityForm').addEventListener('submit', function(e) {
-            const personnelField = document.getElementById('personnel');
-            const personnelValue = personnelField.value.trim();
-
-            if (personnelValue) {
-                e.preventDefault(); // Prevent default form submission
-
-                // Split by commas and trim each name
-                const personnelList = personnelValue.split(',')
-                    .map(name => name.trim())
-                    .filter(name => name);
-
-                // Remove the textarea
-                personnelField.remove();
-
-                // Create hidden input for each person
-                personnelList.forEach(function(person, index) {
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = `personnel[${index}]`;
-                    hiddenInput.value = person;
-                    document.getElementById('activityForm').appendChild(hiddenInput);
-                });
-
-                // Submit the form
-                document.getElementById('activityForm').submit();
-            }
         });
     });
 </script>

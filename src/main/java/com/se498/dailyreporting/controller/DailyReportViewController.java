@@ -19,12 +19,15 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller for daily report UI views
@@ -117,7 +120,7 @@ public class DailyReportViewController {
     }
 
     /**
-     * Form to create a new report
+     * Form to create a new report - simplified version without activities
      */
     @GetMapping("/new")
     public String newReportForm(Model model) {
@@ -127,17 +130,31 @@ public class DailyReportViewController {
     }
 
     /**
-     * Create a new report
+     * Create a new report - no activities in initial creation
      */
     @PostMapping("/new")
     public String createReport(
-            @ModelAttribute DailyReportRequest request,
+            @ModelAttribute @Valid DailyReportRequest request,
+            BindingResult bindingResult,
             @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Model model) {
 
         userDetails = userDetails == null ? getDefaultUser() : userDetails;
 
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("report", request);
+            model.addAttribute("pageTitle", "Create New Report");
+            model.addAttribute("error", "Please correct the errors in the form.");
+            return "dailyreport/edit";
+        }
+
         try {
+            log.debug("Creating new report with project ID: {} and date: {}",
+                    request.getProjectId(), request.getReportDate());
+
+            // Create the basic report (without activities)
             DailyReport report = reportingService.createReport(
                     request.getProjectId(),
                     request.getReportDate(),
@@ -219,6 +236,111 @@ public class DailyReportViewController {
             log.error("Error updating report: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("error", "Error updating report: " + e.getMessage());
             return "redirect:/ui/reports/" + reportId + "/edit";
+        }
+    }
+
+    /**
+     * Form to add a new activity to a report
+     */
+    @GetMapping("/{reportId}/activities/new")
+    public String newActivityForm(@PathVariable String reportId, Model model) {
+        try {
+            Optional<DailyReport> reportOpt = reportingService.getReport(reportId);
+
+            if (reportOpt.isPresent()) {
+                model.addAttribute("reportId", reportId);
+                model.addAttribute("report", reportOpt.get());
+                model.addAttribute("activity", new ActivityEntryRequest());
+                model.addAttribute("activityStatuses", ActivityStatus.values());
+                model.addAttribute("pageTitle", "Add Activity");
+
+                return "dailyreport/activity-edit";
+            } else {
+                model.addAttribute("error", "Report not found with ID: " + reportId);
+                return "redirect:/ui/reports";
+            }
+        } catch (Exception e) {
+            log.error("Error preparing activity form: {}", e.getMessage(), e);
+            model.addAttribute("error", "Error preparing activity form: " + e.getMessage());
+            return "redirect:/ui/reports/" + reportId;
+        }
+    }
+
+    /**
+     * Add a new activity to a report
+     */
+    @PostMapping("/{reportId}/activities/new")
+    public String addActivity(
+            @PathVariable String reportId,
+            @ModelAttribute @Valid ActivityEntryRequest request,
+            BindingResult bindingResult,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        userDetails = userDetails == null ? getDefaultUser() : userDetails;
+
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            try {
+                Optional<DailyReport> reportOpt = reportingService.getReport(reportId);
+                if (reportOpt.isPresent()) {
+                    model.addAttribute("reportId", reportId);
+                    model.addAttribute("report", reportOpt.get());
+                    model.addAttribute("activity", request);
+                    model.addAttribute("activityStatuses", ActivityStatus.values());
+                    model.addAttribute("pageTitle", "Add Activity");
+                    model.addAttribute("error", "Please correct the errors in the form.");
+                    return "dailyreport/activity-edit";
+                }
+            } catch (Exception e) {
+                log.error("Error handling validation: {}", e.getMessage(), e);
+            }
+
+            redirectAttributes.addFlashAttribute("error", "Invalid activity data provided.");
+            return "redirect:/ui/reports/" + reportId + "/activities/new";
+        }
+
+        try {
+            // Process personnel from text if provided
+            request.processPersonnelFromText();
+
+            // Create activity from request
+            ActivityEntry activity = new ActivityEntry();
+            activity.setId(UUID.randomUUID().toString());
+            activity.setReportId(reportId);
+            activity.setDescription(request.getDescription());
+            activity.setCategory(request.getCategory());
+
+            // Handle optional fields
+            LocalDateTime now = LocalDateTime.now();
+            activity.setStartTime(request.getStartTime() != null ? request.getStartTime() : now);
+            activity.setEndTime(request.getEndTime() != null ?
+                    request.getEndTime() :
+                    (request.getStartTime() != null ? request.getStartTime().plusHours(1) : now.plusHours(1)));
+
+            activity.setProgress(request.getProgress() >= 0 ? request.getProgress() : 0);
+            activity.setStatus(request.getStatus() != null ? request.getStatus() : ActivityStatus.PLANNED);
+            activity.setNotes(request.getNotes());
+            activity.setCreatedBy(userDetails.getUsername());
+            activity.setCreatedAt(LocalDateTime.now());
+
+            // Add personnel if provided
+            if (request.getPersonnel() != null && !request.getPersonnel().isEmpty()) {
+                activity.setPersonnel(new HashSet<>(request.getPersonnel()));
+            } else {
+                activity.setPersonnel(new HashSet<>());
+            }
+
+            // Add activity to report
+            reportingService.addActivityToReport(reportId, activity);
+
+            redirectAttributes.addFlashAttribute("success", "Activity added successfully");
+            return "redirect:/ui/reports/" + reportId;
+        } catch (Exception e) {
+            log.error("Error adding activity: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error adding activity: " + e.getMessage());
+            return "redirect:/ui/reports/" + reportId + "/activities/new";
         }
     }
 
@@ -309,77 +431,6 @@ public class DailyReportViewController {
     }
 
     /**
-     * Form to add a new activity to a report
-     */
-    @GetMapping("/{reportId}/activities/new")
-    public String newActivityForm(@PathVariable String reportId, Model model) {
-        try {
-            Optional<DailyReport> reportOpt = reportingService.getReport(reportId);
-
-            if (reportOpt.isPresent()) {
-                model.addAttribute("reportId", reportId);
-                model.addAttribute("report", reportOpt.get());
-                model.addAttribute("activity", new ActivityEntryRequest());
-                model.addAttribute("activityStatuses", ActivityStatus.values());
-                model.addAttribute("pageTitle", "Add Activity");
-
-                return "dailyreport/activity-edit";
-            } else {
-                model.addAttribute("error", "Report not found with ID: " + reportId);
-                return "redirect:/ui/reports";
-            }
-        } catch (Exception e) {
-            log.error("Error preparing activity form: {}", e.getMessage(), e);
-            model.addAttribute("error", "Error preparing activity form: " + e.getMessage());
-            return "redirect:/ui/reports/" + reportId;
-        }
-    }
-
-    /**
-     * Add a new activity to a report
-     */
-    @PostMapping("/{reportId}/activities/new")
-    public String addActivity(
-            @PathVariable String reportId,
-            @ModelAttribute ActivityEntryRequest request,
-            @AuthenticationPrincipal UserDetails userDetails,
-            RedirectAttributes redirectAttributes) {
-
-        userDetails = userDetails == null ? getDefaultUser() : userDetails;
-
-        try {
-            // Create activity from request
-            ActivityEntry activity = new ActivityEntry();
-            activity.setId(UUID.randomUUID().toString());
-            activity.setReportId(reportId);
-            activity.setDescription(request.getDescription());
-            activity.setCategory(request.getCategory());
-            activity.setStartTime(request.getStartTime());
-            activity.setEndTime(request.getEndTime());
-            activity.setProgress(request.getProgress());
-            activity.setStatus(request.getStatus());
-            activity.setNotes(request.getNotes());
-            activity.setCreatedBy(userDetails.getUsername());
-            activity.setCreatedAt(LocalDateTime.now());
-
-            // Add personnel if provided
-            if (request.getPersonnel() != null) {
-                activity.setPersonnel(new HashSet<>(request.getPersonnel()));
-            }
-
-            // Add activity to report
-            reportingService.addActivityToReport(reportId, activity);
-
-            redirectAttributes.addFlashAttribute("success", "Activity added successfully");
-            return "redirect:/ui/reports/" + reportId;
-        } catch (Exception e) {
-            log.error("Error adding activity: {}", e.getMessage(), e);
-            redirectAttributes.addFlashAttribute("error", "Error adding activity: " + e.getMessage());
-            return "redirect:/ui/reports/" + reportId + "/activities/new";
-        }
-    }
-
-    /**
      * Form to edit an activity
      */
     @GetMapping("/activities/{activityId}/edit")
@@ -400,7 +451,7 @@ public class DailyReportViewController {
                 request.setNotes(activity.getNotes());
 
                 if (activity.getPersonnel() != null) {
-                    request.setPersonnel(new ArrayList<>(request.getPersonnel()));
+                    request.setPersonnel(new ArrayList<>(activity.getPersonnel()));
                 }
 
                 model.addAttribute("activity", request);
@@ -408,6 +459,12 @@ public class DailyReportViewController {
                 model.addAttribute("reportId", activity.getReportId());
                 model.addAttribute("activityStatuses", ActivityStatus.values());
                 model.addAttribute("pageTitle", "Edit Activity");
+
+                // Get the report to show its details
+                Optional<DailyReport> reportOpt = reportingService.getReport(activity.getReportId());
+                if (reportOpt.isPresent()) {
+                    model.addAttribute("report", reportOpt.get());
+                }
 
                 return "dailyreport/activity-edit";
             } else {
@@ -421,29 +478,70 @@ public class DailyReportViewController {
         }
     }
 
-    /**
-     * Update an activity
-     */
     @PostMapping("/activities/{activityId}/edit")
     public String updateActivity(
             @PathVariable String activityId,
-            @ModelAttribute ActivityEntryRequest request,
-            RedirectAttributes redirectAttributes) {
+            @ModelAttribute @Valid ActivityEntryRequest request,
+            BindingResult bindingResult,
+            @AuthenticationPrincipal UserDetails userDetails,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        userDetails = userDetails == null ? getDefaultUser() : userDetails;
+
+        // Get the existing activity to determine the report ID
+        Optional<ActivityEntry> existingActivityOpt = reportingService.getActivity(activityId);
+        if (existingActivityOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Activity not found: " + activityId);
+            return "redirect:/ui/reports";
+        }
+        String reportId = existingActivityOpt.get().getReportId();
+
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            try {
+                Optional<DailyReport> reportOpt = reportingService.getReport(reportId);
+                if (reportOpt.isPresent()) {
+                    model.addAttribute("reportId", reportId);
+                    model.addAttribute("report", reportOpt.get());
+                    model.addAttribute("activity", request);
+                    model.addAttribute("activityId", activityId);
+                    model.addAttribute("activityStatuses", ActivityStatus.values());
+                    model.addAttribute("pageTitle", "Edit Activity");
+                    model.addAttribute("error", "Please correct the errors in the form.");
+                    return "dailyreport/activity-edit";
+                }
+            } catch (Exception e) {
+                log.error("Error handling validation: {}", e.getMessage(), e);
+            }
+
+            redirectAttributes.addFlashAttribute("error", "Invalid activity data provided.");
+            return "redirect:/ui/reports/activities/" + activityId + "/edit";
+        }
 
         try {
+            // Process personnel from text if provided
+            request.processPersonnelFromText();
+
             // Create updated activity from request
             ActivityEntry activity = new ActivityEntry();
             activity.setDescription(request.getDescription());
             activity.setCategory(request.getCategory());
+
+            // Handle optional fields
             activity.setStartTime(request.getStartTime());
             activity.setEndTime(request.getEndTime());
             activity.setProgress(request.getProgress());
             activity.setStatus(request.getStatus());
             activity.setNotes(request.getNotes());
+            activity.setUpdatedBy(userDetails.getUsername());
+            activity.setUpdatedAt(LocalDateTime.now());
 
             // Add personnel if provided
-            if (request.getPersonnel() != null) {
+            if (request.getPersonnel() != null && !request.getPersonnel().isEmpty()) {
                 activity.setPersonnel(new HashSet<>(request.getPersonnel()));
+            } else {
+                activity.setPersonnel(new HashSet<>());
             }
 
             // Update activity
