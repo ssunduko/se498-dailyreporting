@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/reports")
@@ -47,7 +48,7 @@ public class DailyReportRestController {
     private final ReasonMapper reasonMapper;
 
     @PostMapping
-    @Operation(summary = "Create a new daily report")
+    @Operation(summary = "Create a new daily report with optional activities")
     public ResponseEntity<DailyReportResponse> createReport(
             @RequestBody @Valid DailyReportRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -68,6 +69,16 @@ public class DailyReportRestController {
                     request.getNotes(),
                     userDetails.getUsername()
             );
+        }
+
+        // Add initial activities if provided
+        if (request.getInitialActivities() != null && !request.getInitialActivities().isEmpty()) {
+            for (ActivityEntryRequest activityRequest : request.getInitialActivities()) {
+                addActivityToReport(report.getId(), activityRequest, userDetails);
+            }
+
+            // Reload the report to include the newly added activities
+            report = reportingService.getReport(report.getId()).orElse(report);
         }
 
         DailyReportResponse response = mapToReportResponse(report);
@@ -248,35 +259,71 @@ public class DailyReportRestController {
     }
 
     @PostMapping("/{reportId}/activities")
-    @Operation(summary = "Add an activity to a report")
+    @Operation(summary = "Add an activity to a report (with optional fields)")
     public ResponseEntity<ActivityEntryResponse> addActivity(
             @PathVariable String reportId,
             @RequestBody @Valid ActivityEntryRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
+        // Process personnel if coming from a form
+        request.processPersonnelFromText();
+
+        ActivityEntry savedActivity = addActivityToReport(reportId, request, userDetails);
+        return new ResponseEntity<>(mapToActivityResponse(savedActivity), HttpStatus.CREATED);
+    }
+
+    /**
+     * Helper method to add an activity to a report
+     * Handles optional fields with appropriate defaults
+     */
+    private ActivityEntry addActivityToReport(
+            String reportId,
+            ActivityEntryRequest request,
+            UserDetails userDetails) {
+
         // Create activity from request
         ActivityEntry activity = new ActivityEntry();
         activity.setId(UUID.randomUUID().toString());
         activity.setReportId(reportId);
+
+        // Required fields
         activity.setDescription(request.getDescription());
         activity.setCategory(request.getCategory());
-        activity.setStartTime(request.getStartTime());
-        activity.setEndTime(request.getEndTime());
-        activity.setProgress(request.getProgress());
-        activity.setStatus(request.getStatus());
+
+        // Handle optional fields with null checks
+        // For startTime and endTime, default to current time if not provided
+        LocalDateTime now = LocalDateTime.now();
+        activity.setStartTime(request.getStartTime() != null ?
+                request.getStartTime() :
+                now);
+
+        activity.setEndTime(request.getEndTime() != null ?
+                request.getEndTime() :
+                now.plusHours(1)); // Default to 1 hour duration
+
+        // For progress, default to 0 if not provided or negative
+        activity.setProgress(request.getProgress() >= 0 ? request.getProgress() : 0);
+
+        // For status, default to PLANNED if not provided
+        activity.setStatus(request.getStatus() != null ? request.getStatus() : ActivityStatus.PLANNED);
+
+        // Optional notes field
         activity.setNotes(request.getNotes());
+
+        // Audit fields
         activity.setCreatedBy(userDetails.getUsername());
         activity.setCreatedAt(LocalDateTime.now());
 
         // Add personnel if provided
-        if (request.getPersonnel() != null) {
-            activity.setPersonnel(request.getPersonnel());
+        if (!request.getPersonnel().isEmpty()) {
+            activity.setPersonnel(new HashSet<>(request.getPersonnel()));
+        } else {
+            // Initialize with empty set if not provided
+            activity.setPersonnel(new HashSet<>());
         }
 
         // Add activity to report
-        ActivityEntry savedActivity = reportingService.addActivityToReport(reportId, activity);
-
-        return new ResponseEntity<>(mapToActivityResponse(savedActivity), HttpStatus.CREATED);
+        return reportingService.addActivityToReport(reportId, activity);
     }
 
     @GetMapping("/activities/{activityId}")
@@ -308,19 +355,41 @@ public class DailyReportRestController {
             @RequestBody @Valid ActivityEntryRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        // Create updated activity from request
+        // Get the existing activity first to preserve any fields not included in the update
+        ActivityEntry existingActivity = reportingService.getActivity(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
+
+        // Create updated activity from request, preserving values for optional fields if not provided
         ActivityEntry activity = new ActivityEntry();
         activity.setDescription(request.getDescription());
         activity.setCategory(request.getCategory());
-        activity.setStartTime(request.getStartTime());
-        activity.setEndTime(request.getEndTime());
-        activity.setProgress(request.getProgress());
-        activity.setStatus(request.getStatus());
-        activity.setNotes(request.getNotes());
 
-        // Add personnel if provided
+        // Only update optional fields if they're provided in the request
+        activity.setStartTime(request.getStartTime() != null ?
+                request.getStartTime() :
+                existingActivity.getStartTime());
+
+        activity.setEndTime(request.getEndTime() != null ?
+                request.getEndTime() :
+                existingActivity.getEndTime());
+
+        activity.setProgress(request.getProgress() >= 0 ?
+                request.getProgress() :
+                existingActivity.getProgress());
+
+        activity.setStatus(request.getStatus() != null ?
+                request.getStatus() :
+                existingActivity.getStatus());
+
+        activity.setNotes(request.getNotes() != null ?
+                request.getNotes() :
+                existingActivity.getNotes());
+
+        // Add personnel if provided, otherwise keep existing
         if (request.getPersonnel() != null) {
-            activity.setPersonnel(request.getPersonnel());
+            activity.setPersonnel(new HashSet<>(request.getPersonnel()));
+        } else {
+            activity.setPersonnel(existingActivity.getPersonnel());
         }
 
         // Update activity

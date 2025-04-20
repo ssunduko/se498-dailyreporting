@@ -1,334 +1,241 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/default}">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>View Daily Report</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle ?: 'View Report'}">View Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .progress {
+            height: 20px;
+        }
+        .badge-draft { background-color: #6c757d; }
+        .badge-submitted { background-color: #007bff; }
+        .badge-approved { background-color: #28a745; }
+        .badge-rejected { background-color: #dc3545; }
+
+        .badge-planned { background-color: #6c757d; }
+        .badge-in_progress { background-color: #007bff; }
+        .badge-completed { background-color: #28a745; }
+        .badge-delayed { background-color: #ffc107; }
+        .badge-cancelled { background-color: #dc3545; }
+
+        .activity-card {
+            transition: all 0.3s ease;
+        }
+        .activity-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .empty-value {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-<div layout:fragment="content">
-    <!-- Report Header -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0">
-                        <i class="fas fa-clipboard-list me-2"></i>
-                        Daily Report: <span th:text="${report.projectId}">PRJ001</span> -
-                        <span th:text="${#temporals.format(report.reportDate, 'yyyy-MM-dd')}">2025-03-15</span>
-                    </h3>
-                    <span class="badge"
-                          th:classappend="${
-                                report.status == 'DRAFT' ? 'bg-secondary' :
-                                report.status == 'SUBMITTED' ? 'bg-primary' :
-                                report.status == 'APPROVED' ? 'bg-success' :
-                                report.status == 'REJECTED' ? 'bg-danger' : 'bg-warning'}"
-                          th:text="${report.status}">
-                            DRAFT
-                        </span>
+<div class="container mt-4">
+    <!-- Report Details Card -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Daily Report Details</h3>
+            <div>
+                    <span class="badge text-white"
+                          th:classappend="${'badge-' + #strings.toLowerCase(report.status)}"
+                          th:text="${report.status}">STATUS</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Project ID:</strong> <span th:text="${report.projectId}">PROJECT_ID</span></p>
+                    <p><strong>Report Date:</strong> <span th:text="${#temporals.format(report.reportDate, 'yyyy-MM-dd')}">DATE</span></p>
+                    <p><strong>Created By:</strong> <span th:text="${report.createdBy}">USER</span></p>
+                    <p><strong>Created At:</strong> <span th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">DATE_TIME</span></p>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Report Details -->
-                        <div class="col-md-6">
-                            <h4>Report Details</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <tr>
-                                        <th class="bg-light" style="width: 30%">Project ID</th>
-                                        <td th:text="${report.projectId}">PRJ001</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Date</th>
-                                        <td th:text="${#temporals.format(report.reportDate, 'yyyy-MM-dd')}">2025-03-15</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Status</th>
-                                        <td th:text="${report.status}">DRAFT</td>
-                                    </tr>
-                                    <tr th:if="${report.status == 'REJECTED'}">
-                                        <th class="bg-light">Rejection Reason</th>
-                                        <td class="text-danger" th:text="${report.rejectionReason}">Missing critical information</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Created By</th>
-                                        <td th:text="${report.createdBy + ' on ' + #temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">user123 on 2025-03-15 08:30</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Last Updated</th>
-                                        <td th:text="${report.updatedBy + ' on ' + #temporals.format(report.updatedAt, 'yyyy-MM-dd HH:mm')}">user123 on 2025-03-15 14:30</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong> <span th:text="${report.status}">STATUS</span></p>
+                    <p><strong>Overall Progress:</strong> <span th:text="${#numbers.formatDecimal(progress, 1, 1) + '%'}">PROGRESS</span></p>
+                    <p><strong>Complete:</strong> <span th:text="${isComplete ? 'Yes' : 'No'}">COMPLETE</span></p>
+                    <p><strong>Total Duration:</strong> <span th:text="${totalDuration + ' min'}">DURATION</span></p>
+                </div>
+            </div>
 
-                        <!-- Report Metrics -->
-                        <div class="col-md-6">
-                            <h4>Report Metrics</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <tr>
-                                        <th class="bg-light" style="width: 30%">Completion</th>
-                                        <td>
-                                            <div class="progress" style="height: 25px;">
-                                                <div class="progress-bar" role="progressbar"
-                                                     th:style="'width: ' + ${progress} + '%'"
-                                                     th:text="${#numbers.formatDecimal(progress, 0, 0) + '%'}"
-                                                     th:classappend="${
-                                                            progress < 50 ? 'bg-danger' :
-                                                            progress < 80 ? 'bg-warning' : 'bg-success'}">
-                                                    0%
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Status</th>
-                                        <td>
-                                            <span th:if="${isComplete}" class="badge bg-success">Complete</span>
-                                            <span th:unless="${isComplete}" class="badge bg-warning">Incomplete</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Total Duration</th>
-                                        <td>
-                                            <span th:text="${totalDuration}">0</span> minutes
-                                            (<span th:text="${#numbers.formatDecimal(totalDuration/60, 1, 1)}">0.0</span> hours)
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th class="bg-light">Activities</th>
-                                        <td th:text="${activities.size()}">0</td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+            <div class="mt-3">
+                <p><strong>Notes:</strong></p>
+                <div class="p-3 bg-light rounded">
+                    <p th:utext="${report.notes != null ? #strings.replace(#strings.escapeXml(report.notes), '&#10;', '<br/>') : 'No notes available'}" th:classappend="${report.notes == null ? 'empty-value' : ''}">NOTES</p>
+                </div>
+            </div>
 
-                    <!-- Report Notes -->
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <h4>Report Notes</h4>
-                            <div class="card">
-                                <div class="card-body bg-light">
-                                    <p th:if="${report.notes == null || report.notes.isEmpty()}" class="text-muted fst-italic">
-                                        No notes provided for this report.
-                                    </p>
-                                    <p th:unless="${report.notes == null || report.notes.isEmpty()}" th:text="${report.notes}">
-                                        Report notes will be displayed here.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Report Actions -->
+            <div class="mt-4 d-flex justify-content-between">
+                <div>
+                    <a th:href="@{/ui/reports}" class="btn btn-secondary">Back to Reports</a>
+                    <a th:href="@{/ui/reports/{id}/edit(id=${report.id})}" class="btn btn-warning"
+                       th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                </div>
 
-                    <!-- Report Actions -->
-                    <div class="row mt-4">
-                        <div class="col-md-12 d-flex justify-content-between">
-                            <div>
-                                <a th:href="@{/ui/reports}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left me-2"></i> Back to Reports
-                                </a>
-                                <a th:href="@{/ui/reports/{id}/edit(id=${report.id})}" class="btn btn-warning ms-2"
-                                   th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
-                                    <i class="fas fa-edit me-2"></i> Edit Report
-                                </a>
-                            </div>
+                <div>
+                    <!-- Report Action Forms -->
+                    <form th:if="${report.status == 'DRAFT'}" th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Submit
+                        </button>
+                    </form>
 
-                            <div th:if="${report.status == 'DRAFT'}">
-                                <form th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i> Submit Report
-                                    </button>
-                                </form>
-                            </div>
+                    <form th:if="${report.status == 'SUBMITTED'}" th:action="@{/ui/reports/{id}/approve(id=${report.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Approve
+                        </button>
+                    </form>
 
-                            <div th:if="${report.status == 'SUBMITTED'}">
-                                <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                                    <i class="fas fa-times-circle me-2"></i> Reject
-                                </button>
-                                <form th:action="@{/ui/reports/{id}/approve(id=${report.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check-circle me-2"></i> Approve
-                                    </button>
-                                </form>
-                            </div>
+                    <button th:if="${report.status == 'SUBMITTED'}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle"></i> Reject
+                    </button>
 
-                            <div th:if="${report.status == 'REJECTED'}">
-                                <form th:action="@{/ui/reports/{id}/submit(id=${report.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i> Re-Submit
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div>
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                    <i class="fas fa-trash me-2"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <button th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Activities Section -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h3 class="mb-0"><i class="fas fa-tasks me-2"></i> Activities</h3>
-                    <a th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
-                       th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
-                       class="btn btn-light">
-                        <i class="fas fa-plus me-2"></i> Add Activity
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div th:if="${activities.isEmpty()}" class="alert alert-info text-center">
-                        <i class="fas fa-info-circle me-2"></i> No activities have been added to this report yet.
-                    </div>
-
-                    <div th:if="${!activities.isEmpty()}" class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
-                            <tr>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Time</th>
-                                <th>Duration</th>
-                                <th>Progress</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="activity : ${activities}">
-                                <td th:text="${activity.category}">Excavation</td>
-                                <td th:text="${activity.description}">Foundation excavation</td>
-                                <td>
-                                    <span th:text="${#temporals.format(activity.startTime, 'HH:mm')}">08:00</span> -
-                                    <span th:text="${#temporals.format(activity.endTime, 'HH:mm')}">12:00</span>
-                                </td>
-                                <td th:text="${activity.calculateDuration().toMinutes() + ' min'}">240 min</td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar" role="progressbar"
-                                             th:style="'width: ' + ${activity.progress} + '%'"
-                                             th:text="${#numbers.formatDecimal(activity.progress, 0, 0) + '%'}"
-                                             th:classappend="${
-                                                        activity.progress < 50 ? 'bg-danger' :
-                                                        activity.progress < 80 ? 'bg-warning' : 'bg-success'}">
-                                            0%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                            <span class="badge"
-                                                  th:classappend="${
-                                                    activity.status == 'NOT_STARTED' ? 'bg-secondary' :
-                                                    activity.status == 'IN_PROGRESS' ? 'bg-primary' :
-                                                    activity.status == 'COMPLETED' ? 'bg-success' :
-                                                    activity.status == 'BLOCKED' ? 'bg-danger' : 'bg-warning'}"
-                                                  th:text="${activity.status}">
-                                                IN_PROGRESS
-                                            </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/ui/reports/activities/{id}/edit(id=${activity.id})}"
-                                           class="btn btn-warning" title="Edit Activity"
-                                           th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a th:href="@{/ui/reports/activities/{id}/progress(id=${activity.id})}"
-                                           class="btn btn-info" title="Update Progress"
-                                           th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
-                                            <i class="fas fa-percentage"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-danger" title="Delete Activity"
-                                                th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
-                                                th:onclick="'showDeleteActivityModal(\'' + ${activity.id} + '\');'">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3>Activities</h3>
+            <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
+               th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
+               class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Activity
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="progress mb-4">
+                <div class="progress-bar" role="progressbar"
+                     th:style="'width: ' + ${progress} + '%'"
+                     th:aria-valuenow="${progress}"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     th:text="${#numbers.formatDecimal(progress, 1, 1) + '%'}">
+                    Progress
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form th:action="@{/ui/reports/{id}/reject(id=${report.id})}" method="post">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="rejectModalLabel">Reject Report</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="reason" class="form-label">Rejection Reason</label>
-                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
-                            <div class="form-text">Please provide a reason for rejecting this report.</div>
+            <div th:if="${activities == null || activities.isEmpty()}" class="alert alert-info">
+                <p>No activities added to this report yet.</p>
+                <a th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}"
+                   th:href="@{/ui/reports/{id}/activities/new(id=${report.id})}"
+                   class="btn btn-sm btn-primary mt-2">
+                    Add First Activity
+                </a>
+            </div>
+
+            <div th:if="${activities != null && !activities.isEmpty()}" class="row row-cols-1 row-cols-md-2 g-4">
+                <div th:each="activity : ${activities}" class="col">
+                    <div class="card h-100 activity-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span th:text="${activity.category}">CATEGORY</span>
+                            <span class="badge text-white"
+                                  th:classappend="${'badge-' + #strings.toLowerCase(activity.status)}"
+                                  th:text="${activity.status}">STATUS</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${activity.description}">DESCRIPTION</h5>
+
+                            <div class="progress mb-3">
+                                <div class="progress-bar" role="progressbar"
+                                     th:style="'width: ' + ${activity.progress} + '%'"
+                                     th:aria-valuenow="${activity.progress}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     th:text="${#numbers.formatDecimal(activity.progress, 1, 1) + '%'}">
+                                    Activity Progress
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Start:</strong>
+                                        <span th:if="${activity.startTime != null}" th:text="${#temporals.format(activity.startTime, 'yyyy-MM-dd HH:mm')}">START_TIME</span>
+                                        <span th:if="${activity.startTime == null}" class="empty-value">Auto-assigned</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>End:</strong>
+                                        <span th:if="${activity.endTime != null}" th:text="${#temporals.format(activity.endTime, 'yyyy-MM-dd HH:mm')}">END_TIME</span>
+                                        <span th:if="${activity.endTime == null}" class="empty-value">Auto-assigned</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p><strong>Duration:</strong> <span th:text="${activity.calculateDuration().toMinutes() + ' min'}">DURATION</span></p>
+
+                            <div th:if="${activity.personnel != null && !activity.personnel.isEmpty()}" class="mb-3">
+                                <p><strong>Personnel:</strong></p>
+                                <div class="d-flex flex-wrap gap-1">
+                                        <span th:each="person : ${activity.personnel}" class="badge bg-secondary">
+                                            <span th:text="${person}">PERSON</span>
+                                        </span>
+                                </div>
+                            </div>
+
+                            <div th:if="${activity.personnel == null || activity.personnel.isEmpty()}" class="mb-3">
+                                <p><strong>Personnel:</strong> <span class="empty-value">None assigned</span></p>
+                            </div>
+
+                            <div class="mt-3">
+                                <p><strong>Notes:</strong></p>
+                                <div th:if="${activity.notes != null && !activity.notes.isEmpty()}">
+                                    <p class="card-text" th:utext="${#strings.replace(#strings.escapeXml(activity.notes), '&#10;', '<br/>')}">NOTES</p>
+                                </div>
+                                <div th:if="${activity.notes == null || activity.notes.isEmpty()}">
+                                    <p class="empty-value">No notes provided</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between" th:if="${report.status == 'DRAFT' || report.status == 'REJECTED'}">
+                            <a th:href="@{/ui/reports/activities/{id}/edit(id=${activity.id})}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                            <a th:href="@{/ui/reports/activities/{id}/progress(id=${activity.id})}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-graph-up"></i> Update Progress
+                            </a>
+                            <form th:action="@{/ui/reports/activities/{id}/delete(id=${activity.id})}" method="post">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this activity?')">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Reject Report</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Delete Report Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form th:action="@{/ui/reports/{id}/delete(id=${report.id})}" method="post">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="deleteModalLabel">Delete Report</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete this report? This action cannot be undone.</p>
-                        <p><strong>Report:</strong>
-                            <span th:text="${report.projectId + ' - ' + #temporals.format(report.reportDate, 'yyyy-MM-dd')}">
-                                    PRJ001 - 2025-03-15
-                                </span>
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete Report</button>
-                    </div>
-                </form>
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Reject Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-        </div>
-    </div>
-
-    <!-- Delete Activity Modal -->
-    <div class="modal fade" id="deleteActivityModal" tabindex="-1" aria-labelledby="deleteActivityModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="deleteActivityForm" th:action="@{/ui/reports/activities/dummy/delete}" method="post">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="deleteActivityModalLabel">Delete Activity</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-body">
+                <form th:action="@{/ui/reports/{id}/reject(id=${report.id})}" method="post">
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Rejection</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
                     </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to delete this activity? This action cannot be undone.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete Activity</button>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm Rejection</button>
                     </div>
                 </form>
             </div>
@@ -336,15 +243,27 @@
     </div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        function showDeleteActivityModal(activityId) {
-            const form = document.getElementById('deleteActivityForm');
-            form.action = form.action.replace('dummy', activityId);
-            const modal = new bootstrap.Modal(document.getElementById('deleteActivityModal'));
-            modal.show();
-        }
-    </script>
-</th:block>
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this report? This action cannot be undone.</p>
+                <form th:action="@{/ui/reports/{id}/delete(id=${report.id})}" method="post">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

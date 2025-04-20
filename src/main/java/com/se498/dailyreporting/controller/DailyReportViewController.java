@@ -364,7 +364,7 @@ public class DailyReportViewController {
 
             // Add personnel if provided
             if (request.getPersonnel() != null) {
-                activity.setPersonnel(request.getPersonnel());
+                activity.setPersonnel(new HashSet<>(request.getPersonnel()));
             }
 
             // Add activity to report
@@ -400,7 +400,7 @@ public class DailyReportViewController {
                 request.setNotes(activity.getNotes());
 
                 if (activity.getPersonnel() != null) {
-                    request.setPersonnel(activity.getPersonnel());
+                    request.setPersonnel(new ArrayList<>(request.getPersonnel()));
                 }
 
                 model.addAttribute("activity", request);
@@ -443,7 +443,7 @@ public class DailyReportViewController {
 
             // Add personnel if provided
             if (request.getPersonnel() != null) {
-                activity.setPersonnel(request.getPersonnel());
+                activity.setPersonnel(new HashSet<>(request.getPersonnel()));
             }
 
             // Update activity
