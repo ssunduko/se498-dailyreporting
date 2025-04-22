@@ -1,6 +1,7 @@
 package com.se498.dailyreporting.ui;
 
 
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +19,7 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -36,7 +38,8 @@ import java.time.format.DateTimeFormatter;
  * Base class for Selenium tests with common setup and utility methods
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {TestDailyReportingApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public abstract class BaseSeleniumTest {
 
     @LocalServerPort

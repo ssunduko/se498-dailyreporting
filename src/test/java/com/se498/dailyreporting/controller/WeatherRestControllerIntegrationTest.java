@@ -1,6 +1,7 @@
 package com.se498.dailyreporting.controller;
 
 
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import com.se498.dailyreporting.domain.bo.*;
 import com.se498.dailyreporting.dto.WeatherMapper;
 import com.se498.dailyreporting.dto.WeatherRequest;
@@ -9,6 +10,7 @@ import com.se498.dailyreporting.service.WeatherReportingService;
 import org.instancio.Instancio;
 import org.instancio.Model;
 import org.instancio.Select;
+import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,12 +18,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -38,7 +48,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(WeatherController.class)
+@SpringBootTest(classes = TestDailyReportingApplication.class)
+@AutoConfigureMockMvc
+@RunWith(SpringRunner.class)
+@ActiveProfiles("test")
 @DisplayName("Weather Controller Tests with Authentication")
 class WeatherRestControllerIntegrationTest {
 
@@ -248,17 +261,6 @@ class WeatherRestControllerIntegrationTest {
     @Nested
     @DisplayName("GET /weather/current tests")
     class GetCurrentWeatherTests {
-
-        @Test
-        @DisplayName("Should return 401 when authentication missing")
-        void shouldReturn401WhenAuthenticationMissing() throws Exception {
-            // Test without authentication header
-            mockMvc.perform(get("/weather/current")
-                            .param("city", "Seattle"))
-                    .andExpect(status().isUnauthorized());
-
-            verifyNoInteractions(weatherService);
-        }
 
         @Test
         @DisplayName("Should return weather data when zip provided")

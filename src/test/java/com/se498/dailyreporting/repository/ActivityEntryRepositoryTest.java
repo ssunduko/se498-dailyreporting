@@ -1,5 +1,6 @@
 package com.se498.dailyreporting.repository;
 
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.vo.ActivityStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -16,9 +19,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
-@DataJpaTest
+@SpringBootTest(classes = {TestDailyReportingApplication.class})
+@ActiveProfiles("test")
 public class ActivityEntryRepositoryTest {
 
     @Mock

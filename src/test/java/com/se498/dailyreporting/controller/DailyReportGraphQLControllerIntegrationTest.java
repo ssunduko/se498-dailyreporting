@@ -2,6 +2,7 @@ package com.se498.dailyreporting.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.bo.DailyReport;
 import com.se498.dailyreporting.domain.vo.ActivityStatus;
@@ -32,7 +33,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(classes = {TestDailyReportingApplication.class})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional

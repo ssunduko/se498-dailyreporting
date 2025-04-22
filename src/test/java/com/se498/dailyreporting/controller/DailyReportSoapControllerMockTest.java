@@ -1,5 +1,6 @@
 package com.se498.dailyreporting.controller;
 
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import com.se498.dailyreporting.domain.bo.ActivityEntry;
 import com.se498.dailyreporting.domain.bo.DailyReport;
 import com.se498.dailyreporting.domain.vo.ActivityStatus;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.*;
  * Test for DailyReportSoapController that simulates Postman SOAP testing
  * This test directly constructs SOAP XML messages and sends them via HTTP
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {TestDailyReportingApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class DailyReportSoapControllerMockTest {
 

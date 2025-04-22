@@ -1,6 +1,7 @@
 package com.se498.dailyreporting.controller;
 
 
+import com.se498.dailyreporting.TestDailyReportingApplication;
 import com.se498.dailyreporting.domain.bo.DailyReport;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * A simplified SOAP test to diagnose JAXB issues
  */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {TestDailyReportingApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public class SimplifiedSoapTest {
 
