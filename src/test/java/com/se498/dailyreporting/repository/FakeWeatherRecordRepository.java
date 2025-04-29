@@ -1,6 +1,7 @@
 package com.se498.dailyreporting.repository;
 
 import com.se498.dailyreporting.domain.bo.*;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
  * Fake implementation of WeatherRecordRepository for testing
  */
 @Repository
+@Primary
 public class FakeWeatherRecordRepository implements WeatherRecordRepository {
 
     private final Map<String, WeatherRecord> recordsById = new ConcurrentHashMap<>();
